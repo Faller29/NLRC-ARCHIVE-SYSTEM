@@ -1,7 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:nlrc_archive/screens/archive_page.dart';
 import 'package:nlrc_archive/screens/home_page.dart';
+import 'package:nlrc_archive/screens/login_page.dart';
 
 class ScreenWrapper extends StatefulWidget {
   @override
@@ -9,24 +11,21 @@ class ScreenWrapper extends StatefulWidget {
 }
 
 class _ScreenWrapperState extends State<ScreenWrapper> {
-  // Current index for navigation
   int _selectedIndex = 0;
 
   // Example menu items for the side navigation bar
   final List<Map<String, dynamic>> _menuItems = [
-    {'icon': Icons.dashboard, 'label': 'Dashboard'},
-    {'icon': Icons.analytics, 'label': 'Reports'},
-    {'icon': Icons.people, 'label': 'User Management'},
-    {'icon': Icons.settings, 'label': 'Settings'},
+    {'icon': Icons.dashboard, 'label': 'Home'},
+    {'icon': Icons.analytics, 'label': 'Archive'},
+    // {'icon': Icons.settings, 'label': 'Settings'},
   ];
 
   // List of pages to navigate to
-  final List<Widget> _pages = [HomePage()];
+  final List<Widget> _pages = [HomePage(), ArchivePage()];
 
   @override
   void initState() {
     super.initState();
-    //fetchDataAndGenerateDartFile();
   }
 
   @override
@@ -87,7 +86,6 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                     ],
                   ),
                 ),
-                // Navigation Menu Items
                 Expanded(
                   child: ListView.builder(
                     itemCount: _menuItems.length,
@@ -133,7 +131,10 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                           horizontal: 20, vertical: 15),
                     ),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: ((context) => IndexPage())));
                     },
                     icon: Icon(Icons.logout, color: Colors.white),
                     label: Text(
@@ -145,7 +146,6 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
               ],
             ),
           ),
-          // Main Content Area
           Expanded(
             child: _pages[_selectedIndex],
           ),

@@ -22,7 +22,7 @@ class _logInWidgetPage extends State<LoginWidget> {
         SnackBar(content: Text('Logging in...')),
       );
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomePage()));
+          context, MaterialPageRoute(builder: (context) => ScreenWrapper()));
     }
   }
 

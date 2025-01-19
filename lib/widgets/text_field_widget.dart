@@ -9,7 +9,6 @@ class TextFieldWidget extends StatefulWidget {
   final String labelText;
   final bool obscureText;
   final ValueChanged<String>? onFieldSubmitted;
-  final int? maxLine;
 
   const TextFieldWidget({
     Key? key,
@@ -21,7 +20,6 @@ class TextFieldWidget extends StatefulWidget {
     this.validator,
     this.obscureText = false,
     this.onFieldSubmitted,
-    this.maxLine,
   }) : super(key: key);
 
   @override
@@ -33,7 +31,6 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
-      maxLines: widget.maxLine,
       obscureText: widget.obscureText,
       decoration: InputDecoration(
         labelText: widget.labelText,
