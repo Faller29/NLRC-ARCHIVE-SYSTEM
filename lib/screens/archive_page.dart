@@ -12,152 +12,175 @@ class _ArchivePageState extends State<ArchivePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.max,
       children: [
-        Row(
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(50.0),
-                child: Text('Arbiters'),
-              ),
-            ),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(50.0),
-                child: Text('Received'),
-              ),
-            ),
-          ],
-        ),
-        Flexible(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Stack(
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Text(
-                        'Archive Document',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        width: MediaQuery.sizeOf(context).width / 2 - 100,
-                        child: ListView(
-                          shrinkWrap: true,
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Flexible(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Stack(
+                      children: [
+                        Column(
+                          mainAxisSize: MainAxisSize.max,
                           children: [
-                            ListTile(
-                              title: Text(
-                                'Sack 1 example',
-                                style: TextStyle(fontSize: 16),
+                            Text(
+                              'Archive Document',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Container(
+                              width: MediaQuery.sizeOf(context).width / 2 - 100,
+                              child: ListView(
+                                shrinkWrap: true,
                                 children: [
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      print('Delete Sack 1');
-                                    },
+                                  ListTile(
+                                    title: Text(
+                                      'Sack 1 example',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.delete,
+                                              color: Colors.red),
+                                          onPressed: () {
+                                            print('Delete Sack 1');
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.send,
+                                              color: Colors.green),
+                                          onPressed: () {
+                                            print('Submit Sack 1');
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    onTap: () => showDialog(
+                                        context: context,
+                                        builder: ((context) {
+                                          return SackContent();
+                                        })),
                                   ),
-                                  IconButton(
-                                    icon: Icon(Icons.send, color: Colors.green),
-                                    onPressed: () {
-                                      print('Submit Sack 1');
-                                    },
+                                  Divider(),
+                                  ListTile(
+                                    title: Text(
+                                      'Sack 2 example',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.delete,
+                                              color: Colors.red),
+                                          onPressed: () {
+                                            print('Delete Sack 2');
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.send,
+                                              color: Colors.green),
+                                          onPressed: () {
+                                            print('Submit Sack 2');
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    onTap: () => showDialog(
+                                        context: context,
+                                        builder: ((context) {
+                                          return SackContent();
+                                        })),
                                   ),
                                 ],
                               ),
-                              onTap: () => showDialog(
-                                  context: context,
-                                  builder: ((context) {
-                                    return SackContent();
-                                  })),
-                            ),
-                            Divider(),
-                            ListTile(
-                              title: Text(
-                                'Sack 2 example',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      print('Delete Sack 2');
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.send, color: Colors.green),
-                                    onPressed: () {
-                                      print('Submit Sack 2');
-                                    },
-                                  ),
-                                ],
-                              ),
-                              onTap: () => showDialog(
-                                  context: context,
-                                  builder: ((context) {
-                                    return SackContent();
-                                  })),
-                            ),
+                            )
                           ],
                         ),
-                      )
-                    ],
-                  ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.greenAccent,
-                      ),
-                      onPressed: () => showDialog(
-                          context: context,
-                          builder: ((context) {
-                            return AlertDialog(
-                              title: Text('Create Sack'),
-                              content: TextFieldWidget(
-                                  controller: _sackId,
-                                  labelText: 'Enter Sack ID'),
-                              actions: [
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('Close'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('Add'),
-                                ),
-                              ],
-                            );
-                          })),
-                      child: Text(
-                        'Add Sack',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.greenAccent,
+                            ),
+                            onPressed: () => showDialog(
+                                context: context,
+                                builder: ((context) {
+                                  return AlertDialog(
+                                    title: Text('Create Sack'),
+                                    content: TextFieldWidget(
+                                        controller: _sackId,
+                                        labelText: 'Enter Sack ID'),
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text('Close'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text('Add'),
+                                      ),
+                                    ],
+                                  );
+                                })),
+                            child: Text(
+                              'Add Sack',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              )
+            ],
           ),
-        )
+        ),
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(50.0),
+                  child: Text('Arbiters'),
+                ),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(50.0),
+                  child: Text('Pending\napproval'),
+                ),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(50.0),
+                  child: Text('Request'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
