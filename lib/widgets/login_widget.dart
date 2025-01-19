@@ -14,7 +14,7 @@ class _logInWidgetPage extends State<LoginWidget> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _obscurePassword = true; // Toggles the password visibility
+  bool _obscurePassword = true;
 
   void _login() {
     if (_formKey.currentState?.validate() ?? false) {

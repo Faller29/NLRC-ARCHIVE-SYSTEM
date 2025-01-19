@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.max,
           children: [
@@ -235,9 +235,11 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                         ],
                                       ),
-                                      onTap: () {
-                                        print('Sack 2 clicked');
-                                      },
+                                      onTap: () => showDialog(
+                                          context: context,
+                                          builder: ((context) {
+                                            return SackContent();
+                                          })),
                                     ),
                                   ],
                                 ),
