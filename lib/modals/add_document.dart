@@ -14,6 +14,8 @@ class _AddDocumentState extends State<AddDocument> {
       TextEditingController();
   final TextEditingController _documentTitleController =
       TextEditingController();
+  final TextEditingController _documentVerdictController =
+      TextEditingController();
   String? _selectedArbiter;
   final _formKey = GlobalKey<FormState>();
 
@@ -41,7 +43,7 @@ class _AddDocumentState extends State<AddDocument> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFieldWidget(
+              TextFieldBoxWidget(
                 controller: _documentNumberController,
                 labelText: 'Document Number',
                 validator: (value) {
@@ -53,7 +55,7 @@ class _AddDocumentState extends State<AddDocument> {
                 },
               ),
               const SizedBox(height: 16.0),
-              TextFieldWidget(
+              TextFieldBoxWidget(
                 controller: _documentTitleController,
                 labelText: 'Document Title',
                 validator: (value) {
@@ -69,30 +71,10 @@ class _AddDocumentState extends State<AddDocument> {
                 height: 16.0,
                 width: 300,
               ),
-              DropdownButtonFormField<String>(
-                value: _selectedArbiter,
-                decoration: InputDecoration(
-                  labelText: 'Arbiter',
-                  border: OutlineInputBorder(),
-                ),
-                items: _arbiterChoices.map((choice) {
-                  return DropdownMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedArbiter = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select an arbiter';
-                  }
-                  return null;
-                },
-              ),
+              TextFieldBoxWidget(
+                controller: _documentVerdictController,
+                labelText: 'Verdict (Optional)',
+              )
             ],
           ),
         ),
@@ -105,6 +87,9 @@ class _AddDocumentState extends State<AddDocument> {
           child: Text('Cancel'),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.greenAccent,
+              foregroundColor: Colors.black),
           onPressed: () => addDocument(),
           child: Text('Submit'),
         ),

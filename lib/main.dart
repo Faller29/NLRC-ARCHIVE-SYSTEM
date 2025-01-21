@@ -17,7 +17,7 @@ Future<void> main() async {
 WindowOptions windowOptions = WindowOptions(
   minimumSize: Size(1421, 799.31),
   size: Size(1430, 804.38),
-  title: 'NLRC Attendance System',
+  title: 'NLRC Archive System',
 );
 
 class MyApp extends StatelessWidget {

@@ -22,10 +22,15 @@ class _SackContentState extends State<SackContent> {
       ),
       actions: [
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
           onPressed: () => Navigator.pop(context),
           child: Text('Close'),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.greenAccent,
+              foregroundColor: Colors.black),
           onPressed: () => showDialog(
               context: context,
               builder: ((context) {
