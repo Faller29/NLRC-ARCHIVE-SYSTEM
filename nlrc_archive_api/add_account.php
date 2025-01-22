@@ -10,7 +10,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
     $username = mysqli_real_escape_string($con, $_POST['username']);
     $password = mysqli_real_escape_string($con, $_POST['password']);
 
-    // Check if the username already exists
+    
     $sql = "SELECT * FROM tbl_user_account WHERE username = '$username' AND password = '$password'";
     $result = mysqli_query($con, $sql);
 
@@ -21,9 +21,9 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
     $count = mysqli_num_rows($result);
 
     if ($count == 1) {
-        echo json_encode("Error"); // User already exists
+        echo json_encode("Error"); 
     } else {
-        // Insert new user into the database
+        
         $insert = "INSERT INTO tbl_user_account (username, password) VALUES ('$username', '$password')";
         $query = mysqli_query($con, $insert);
 

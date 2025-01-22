@@ -27,18 +27,16 @@ class _AddDocumentState extends State<AddDocument> {
       TextEditingController();
   final TextEditingController _documentVerdictController =
       TextEditingController();
-  String? _selectedArbiter;
   final _formKey = GlobalKey<FormState>();
 
-  final List<String> _arbiterChoices = ['Arbiter 1', 'Arbiter 2', 'Arbiter 3'];
-
-  //Endpoint for adding document
   void addDocument(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       final data = {
         'sack_id': widget.sackId,
         'doc_number': _documentNumberController.text.trim(),
         'doc_title': _documentTitleController.text.trim(),
+        'doc_verdict': _documentVerdictController.text.trim(),
+        'status': 'Stored',
       };
 
       try {
@@ -54,7 +52,7 @@ class _AddDocumentState extends State<AddDocument> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Added Successfully')),
             );
-            widget.onDocumentAdded(); // Notify the parent
+            widget.onDocumentAdded();
             Navigator.of(context).pop();
           } else {
             ScaffoldMessenger.of(context).showSnackBar(

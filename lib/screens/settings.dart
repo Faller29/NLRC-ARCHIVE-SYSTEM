@@ -1,7 +1,10 @@
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/modals/sack_content.dart';
+import 'package:nlrc_archive/screens/screen_wrapper.dart';
+import 'package:nlrc_archive/sql_functions/sql_backend.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -12,16 +15,20 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final today = DateFormat('EEEE, MMMM, dd, yyyy').format(DateTime.now());
   String nlrc = "National Labor Relations Commission";
-  List<Map<String, String>> _users = [
-    {'name': 'LA Santos', 'room': '1'},
-    {'name': 'LA Renzy', 'room': '2'},
-    {'name': 'LA Simon', 'room': '3'},
-  ];
 
-  List<Map<String, String>> _accounts = [
-    {'username': 'arbiter1', 'password': 'password123', 'user': 'LA Renzy'},
-    {'username': 'arbiter2', 'password': 'securepass', 'user': 'LA Simon'},
-  ];
+  Future<void> fetchArbiters() async {
+    List<Map<String, String>> arbiters = await getArbiters();
+    setState(() {
+      arbiter = arbiters;
+    });
+  }
+
+  void _addNewArbiter(
+      String name, String room, String username, String password) {
+    addArbiter(name, room, username, password).then((_) {
+      fetchArbiters();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +56,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    // Left Column
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -74,8 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                     ElevatedButton.icon(
                                       onPressed: () {
-                                        _showAddUserDialog(
-                                            context); // Show dialog for adding a user
+                                        _showAddUserDialog(context);
                                       },
                                       icon: Icon(Icons.add),
                                       label: Text('Add'),
@@ -92,7 +97,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 SizedBox(height: 20),
                                 Expanded(
                                   child: ListView.builder(
-                                    itemCount: _users.length,
+                                    itemCount: arbiter.length,
                                     itemBuilder: (context, index) {
                                       return Card(
                                         margin:
@@ -102,109 +107,44 @@ class _SettingsPageState extends State<SettingsPage> {
                                             backgroundColor:
                                                 Colors.blueGrey[700],
                                             child: Text(
-                                              _users[index]['name']![
-                                                  0], // First letter of the name
+                                              arbiter[index]['name']![0],
                                               style: TextStyle(
                                                   color: Colors.white),
                                             ),
                                           ),
-                                          title: Text(_users[index]['name']!),
+                                          title: Text(arbiter[index]['name']!),
                                           subtitle: Text(
-                                              'Room: ${_users[index]['room']}'),
-                                          trailing: IconButton(
-                                            icon: Icon(Icons.delete,
-                                                color: Colors.red),
-                                            onPressed: () {
-                                              setState(() {
-                                                _users.removeAt(
-                                                    index); // Remove user
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Expanded(
-                      flex: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Accounts',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        _showAddAccountDialog(context);
-                                      },
-                                      icon: Icon(Icons.add),
-                                      label: Text('Add'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.greenAccent,
-                                        foregroundColor: Colors.black,
-                                        iconColor: Colors.black,
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 15, vertical: 10),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20),
-                                Expanded(
-                                  child: ListView.builder(
-                                    itemCount: _accounts.length,
-                                    itemBuilder: (context, index) {
-                                      return Card(
-                                        margin:
-                                            EdgeInsets.symmetric(vertical: 5),
-                                        child: ListTile(
-                                          leading: CircleAvatar(
-                                            backgroundColor:
-                                                Colors.blueGrey[700],
-                                            child: Text(
-                                              _accounts[index]['username']![
-                                                  0], // First letter of username
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                          title: Text(
-                                              'Username: ${_accounts[index]['username']}'),
-                                          subtitle: Text(
-                                            'Password: ${_accounts[index]['password']}\nArbiter: ${_accounts[index]['user']}',
-                                          ),
-                                          isThreeLine: true,
-                                          trailing: IconButton(
-                                            icon: Icon(Icons.delete,
-                                                color: Colors.red),
-                                            onPressed: () {
-                                              setState(() {
-                                                _accounts.removeAt(
-                                                    index); // Remove account
-                                              });
-                                            },
+                                              'Room: ${arbiter[index]['room']}'),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(Icons.edit),
+                                                onPressed: () {
+                                                  _showAddUserDialog(context,
+                                                      isEdit: true,
+                                                      user: arbiter[index]);
+                                                },
+                                              ),
+                                              IconButton(
+                                                icon: Icon(Icons.delete,
+                                                    color: Colors.red),
+                                                onPressed: () {
+                                                  String account_id =
+                                                      arbiter[index]
+                                                          ['arbi_id']!;
+                                                  _showDeleteConfirmation(
+                                                    context,
+                                                    account_id,
+                                                    () => deleteArbiter(
+                                                            account_id)
+                                                        .then((_) {
+                                                      fetchArbiters();
+                                                    }),
+                                                  );
+                                                },
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       );
@@ -225,18 +165,34 @@ class _SettingsPageState extends State<SettingsPage> {
         ));
   }
 
-  void _showAddUserDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final roomController = TextEditingController();
+  void _showAddUserDialog(BuildContext context,
+      {bool isEdit = false, Map<String, String>? user}) {
+    final nameController =
+        TextEditingController(text: isEdit && user != null ? user['name'] : '');
+    final roomController =
+        TextEditingController(text: isEdit && user != null ? user['room'] : '');
+    final usernameController = TextEditingController(
+        text: isEdit && user != null ? user['username'] : '');
+    final passwordController = TextEditingController(
+        text: isEdit && user != null ? user['password'] : '');
+    final passwordConfirmController = TextEditingController(
+        text: isEdit && user != null ? user['password'] : '');
+
     final _formKey = GlobalKey<FormState>();
-    void addUser() {
+
+    void submitUser() {
       if (_formKey.currentState?.validate() ?? false) {
-        setState(() {
-          _users.add({
-            'name': nameController.text,
-            'room': roomController.text,
-          });
-        });
+        if (isEdit) {
+          updateArbiter(
+              user!['arbi_id']!,
+              nameController.text,
+              roomController.text,
+              usernameController.text,
+              passwordController.text);
+        } else {
+          _addNewArbiter(nameController.text, roomController.text,
+              usernameController.text, passwordController.text);
+        }
         Navigator.of(context).pop();
       }
     }
@@ -245,7 +201,7 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add Arbiter'),
+          title: Text(isEdit ? 'Edit Arbiter' : 'Add Arbiter'),
           content: Form(
             key: _formKey,
             child: Column(
@@ -253,7 +209,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 TextFieldBoxWidget(
                   controller: nameController,
-                  labelText: 'Name',
+                  labelText: 'Arbiter Name',
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a Name';
@@ -261,9 +217,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     return null;
                   },
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 TextFieldBoxWidget(
                   controller: roomController,
                   labelText: 'Room Number',
@@ -274,6 +228,44 @@ class _SettingsPageState extends State<SettingsPage> {
                     return null;
                   },
                 ),
+                SizedBox(height: 10),
+                TextFieldBoxWidget(
+                  controller: usernameController,
+                  labelText: 'Username',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a username';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                TextFieldBoxWidget(
+                  controller: passwordController,
+                  labelText: 'Password',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    return null;
+                  },
+                  obscureText: true,
+                ),
+                SizedBox(height: 10),
+                TextFieldBoxWidget(
+                  controller: passwordConfirmController,
+                  labelText: 'Confirm Password',
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        passwordConfirmController != passwordController) {
+                      return 'Password do not match';
+                    }
+                    return null;
+                  },
+                  obscureText: true,
+                ),
+                SizedBox(height: 10),
               ],
             ),
           ),
@@ -285,34 +277,33 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent,
-                  foregroundColor: Colors.black),
-              onPressed: () {
-                addUser();
-              },
-              child: Text('Add'),
+              onPressed: submitUser,
+              child: Text(isEdit ? 'Update' : 'Add'),
             ),
           ],
         );
       },
     );
   }
-
+/* 
   void _showAddAccountDialog(BuildContext context) {
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
-    String? selectedUser;
+    final nameController = TextEditingController();
+    final roomController = TextEditingController();
     final _formKey = GlobalKey<FormState>();
-    void addAccount() {
+    String? _selectedArbiter;
+    // Add the account (user) by calling the addUser function
+    void addAccount() async {
       if (_formKey.currentState?.validate() ?? false) {
-        setState(() {
-          _accounts.add({
-            'username': usernameController.text,
-            'password': passwordController.text,
-            'user': selectedUser!,
-          });
-        });
+        // Call the addUser function with the appropriate parameters
+        _addNewUser(
+          usernameController.text,
+          passwordController.text,
+          _selectedArbiter!,
+        );
+
+        // If the user is successfully added, you can then close the dialog
         Navigator.of(context).pop();
       }
     }
@@ -327,6 +318,33 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Name Field (for arbiter's name)
+                TextFieldBoxWidget(
+                  controller: nameController,
+                  labelText: 'Name',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a name';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+
+                // Room Field (for room number)
+                TextFieldBoxWidget(
+                  controller: roomController,
+                  labelText: 'Room Number',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a room number';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+
+                // Username Field
                 TextFieldBoxWidget(
                   controller: usernameController,
                   labelText: 'Username',
@@ -337,9 +355,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     return null;
                   },
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
+
+                // Password Field
                 TextFieldBoxWidget(
                   controller: passwordController,
                   labelText: 'Password',
@@ -351,19 +369,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                   obscureText: true,
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
+
+                // Dropdown for selecting a user type (if needed)
                 DropdownButtonFormField<String>(
-                  value: selectedUser,
-                  items: _users
+                  value: _selectedArbiter,
+                  items: arbiter
                       .map((user) => DropdownMenuItem(
-                            value: user['name'],
+                            value: user['arbi_id'],
                             child: Text(user['name']!),
                           ))
                       .toList(),
                   onChanged: (value) {
-                    selectedUser = value!;
+                    _selectedArbiter = value!;
                   },
                   decoration: InputDecoration(
                       labelText: 'User', border: OutlineInputBorder()),
@@ -382,10 +400,37 @@ class _SettingsPageState extends State<SettingsPage> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.greenAccent,
                   foregroundColor: Colors.black),
-              onPressed: () {
-                addAccount();
-              },
+              onPressed: addAccount, // Call the addAccount method
               child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  } */
+
+  void _showDeleteConfirmation(
+      BuildContext context, String id, VoidCallback onDelete) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Deletion'),
+          content: Text(
+            'Are you sure you want to delete this item? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                onDelete();
+
+                Navigator.of(context).pop();
+              },
+              child: Text('Delete'),
             ),
           ],
         );

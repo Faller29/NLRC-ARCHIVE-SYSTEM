@@ -24,12 +24,11 @@ class _ArchivePageState extends State<ArchivePage> {
 
   @override
   void initState() {
-    fetchSack();
+    fetch_created_sack();
     super.initState();
   }
 
-//API Endpoint for fetching sack data
-  Future<void> fetchSack() async {
+  Future<void> fetch_created_sack() async {
     var url = "http://localhost/nlrc_archive_api/retrieve_sack.php";
     try {
       var response = await http.get(Uri.parse(url));
@@ -50,7 +49,6 @@ class _ArchivePageState extends State<ArchivePage> {
     }
   }
 
-  //API Endpoint for adding sack
   Future<void> addSack() async {
     if (_sackId.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -84,7 +82,6 @@ class _ArchivePageState extends State<ArchivePage> {
     }
   }
 
-  //API Endpoint for deleting sack
   Future<void> deleteSack(String sackId, int index) async {
     var url = "http://localhost/nlrc_archive_api/delete_sack.php";
     try {
@@ -102,7 +99,7 @@ class _ArchivePageState extends State<ArchivePage> {
           SnackBar(content: Text('Deleted Successfully')),
         );
         setState(() {
-          sackList.removeAt(index); // Remove the deleted sack from the list
+          sackList.removeAt(index);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -124,7 +121,6 @@ class _ArchivePageState extends State<ArchivePage> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            // Header Section
             Card(
               color: const Color.fromARGB(255, 60, 45, 194),
               child: Padding(
@@ -176,8 +172,6 @@ class _ArchivePageState extends State<ArchivePage> {
                 ),
               ),
             ),
-
-            // Main Content Section
             Expanded(
               flex: 1,
               child: Row(
@@ -185,7 +179,6 @@ class _ArchivePageState extends State<ArchivePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  // Left Column
                   Expanded(
                     flex: 2,
                     child: Padding(
@@ -210,8 +203,6 @@ class _ArchivePageState extends State<ArchivePage> {
                       ),
                     ),
                   ),
-
-                  // Center Column
                   Expanded(
                     flex: 4,
                     child: Padding(
@@ -243,7 +234,7 @@ class _ArchivePageState extends State<ArchivePage> {
                                             child: sackList.isEmpty
                                                 ? Center(
                                                     child:
-                                                        CircularProgressIndicator(), // Show loader if list is empty
+                                                        CircularProgressIndicator(),
                                                   )
                                                 : ListView.builder(
                                                     shrinkWrap: true,
@@ -252,14 +243,13 @@ class _ArchivePageState extends State<ArchivePage> {
                                                     itemCount: sackList.length,
                                                     itemBuilder:
                                                         (context, index) {
-                                                      final sack = sackList[
-                                                          index]; // Get the sack data for this index
+                                                      final sack =
+                                                          sackList[index];
                                                       return Column(
                                                         children: [
                                                           ListTile(
                                                             title: Text(
-                                                              sack[
-                                                                  'sack_name'], // Display the sack name
+                                                              sack['sack_name'],
                                                               style: TextStyle(
                                                                   fontSize: 16),
                                                             ),
@@ -300,8 +290,11 @@ class _ArchivePageState extends State<ArchivePage> {
                                                               builder:
                                                                   (context) {
                                                                 return SackContent(
-                                                                    sackId: sack[
-                                                                        'sack_id']); // Pass the sack_id here
+                                                                  sackId: sack[
+                                                                      'sack_id'],
+                                                                  sackName: sack[
+                                                                      'sack_name'],
+                                                                );
                                                               },
                                                             ),
                                                           ),
@@ -402,8 +395,6 @@ class _ArchivePageState extends State<ArchivePage> {
                       ),
                     ),
                   ),
-
-                  // Right Column
                   Expanded(
                     flex: 2,
                     child: Padding(

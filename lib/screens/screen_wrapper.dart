@@ -1,12 +1,23 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/screens/archive_page.dart';
 import 'package:nlrc_archive/screens/home_page.dart';
 import 'package:nlrc_archive/screens/login_page.dart';
 import 'package:nlrc_archive/screens/settings.dart';
+import 'package:nlrc_archive/sql_functions/sql_backend.dart';
+
+List<Map<String, String>> arbiter = [];
+String? adminType;
 
 class ScreenWrapper extends StatefulWidget {
+  final adminType;
+  final name;
+  final room;
+  ScreenWrapper({Key? key, this.adminType, this.name, this.room})
+      : super(key: key);
+
   @override
   _ScreenWrapperState createState() => _ScreenWrapperState();
 }
@@ -14,14 +25,26 @@ class ScreenWrapper extends StatefulWidget {
 class _ScreenWrapperState extends State<ScreenWrapper> {
   int _selectedIndex = 0;
 
-  // Example menu items for the side navigation bar
   final List<Map<String, dynamic>> _menuItems = [
     {'icon': Icons.home, 'label': 'Home'},
     {'icon': Icons.settings, 'label': 'Settings'},
   ];
 
-  // List of pages to navigate to
   final List<Widget> _pages = [HomePage(), SettingsPage()];
+
+  Future<void> fetchArbiters() async {
+    List<Map<String, String>> arbiters = await getArbiters();
+    setState(() {
+      arbiter = arbiters;
+      adminType = widget.adminType;
+    });
+  }
+
+  @override
+  void initState() {
+    fetchArbiters();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +52,11 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
       backgroundColor: const Color.fromARGB(255, 221, 221, 221),
       body: Row(
         children: [
-          // Side Navigation Bar
           Container(
             width: 300,
             color: Colors.blueGrey[800],
             child: Column(
               children: [
-                // Header Section
                 Padding(
                   padding: const EdgeInsets.only(
                       top: 30, bottom: 10, left: 10, right: 10),
@@ -66,16 +87,16 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                           const SizedBox(width: 20),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
-                                'Arbiter Name',
+                                '${widget.name}',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                'Room Name',
+                                '${widget.room}',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ],
@@ -140,7 +161,6 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                     },
                   ),
                 ),
-                //forArchive admin
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: SizedBox(
@@ -157,7 +177,6 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                //color: Colors.white,
                               ),
                             ),
                             Divider(
@@ -172,7 +191,6 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                 SizedBox(
                   height: 50,
                 ),
-                // Logout Button
                 Container(
                   padding: const EdgeInsets.all(10.0),
                   child: ElevatedButton.icon(
@@ -204,7 +222,6 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
               ],
             ),
           ),
-          // Animated Page Switching
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 500),

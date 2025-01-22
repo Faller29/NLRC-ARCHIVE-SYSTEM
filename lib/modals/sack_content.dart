@@ -5,8 +5,10 @@ import 'dart:convert';
 
 class SackContent extends StatefulWidget {
   final String sackId;
+  final String sackName;
 
-  const SackContent({Key? key, required this.sackId}) : super(key: key);
+  const SackContent({Key? key, required this.sackId, required this.sackName})
+      : super(key: key);
 
   @override
   State<SackContent> createState() => _SackContentState();
@@ -14,13 +16,13 @@ class SackContent extends StatefulWidget {
 
 class _SackContentState extends State<SackContent> {
   late Future<List<Map<String, String>>> futureDocuments;
+
   @override
   void initState() {
     super.initState();
     futureDocuments = fetchDocuments(widget.sackId);
   }
 
-  // API Endpoint for fetching document
   Future<List<Map<String, String>>> fetchDocuments(String sackId) async {
     try {
       final response = await http.get(
@@ -33,33 +35,84 @@ class _SackContentState extends State<SackContent> {
 
         if (responseData['status'] == 'success') {
           final data = List<Map<String, dynamic>>.from(responseData['data']);
-
-          if (data.isEmpty) {
-            return [];
-          }
-
+          if (data.isEmpty) return [];
           return data.map((doc) {
             return doc.map((key, value) => MapEntry(key, value.toString()));
           }).toList();
-        } else {
-          return [];
         }
-      } else {
-        return [];
       }
+      return [];
     } catch (e) {
       return [];
     }
   }
 
+  Future<void> deleteDocument(String docId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost/nlrc_archive_api/delete_document.php'),
+        body: {'doc_id': docId},
+      );
+      final data = jsonDecode(response.body);
+
+      if (data['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Document deleted successfully')),
+        );
+        setState(() {
+          futureDocuments = fetchDocuments(widget.sackId);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed to delete document: ${data['message']}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  void showDeleteConfirmation(String docId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Delete Document'),
+          content: Text('Are you sure you want to delete this document?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                deleteDocument(docId);
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Sack ID: ${widget.sackId}'),
+      title: Text(
+        '${widget.sackName}',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
       content: SizedBox(
-        // Ensure the content has bounded dimensions
-        width: MediaQuery.of(context).size.width * 0.2,
-        height: MediaQuery.of(context).size.height * 0.3,
+        width: MediaQuery.of(context).size.width * 0.4,
+        height: MediaQuery.of(context).size.height * 0.5,
         child: FutureBuilder<List<Map<String, String>>>(
           future: futureDocuments,
           builder: (context, snapshot) {
@@ -71,32 +124,60 @@ class _SackContentState extends State<SackContent> {
               final documents = snapshot.data!;
               if (documents.isEmpty) {
                 return Center(
-                    child: Text('No data associated with this sack.'));
+                    child: Text('No documents associated with this sack.'));
               }
               return ListView.builder(
                 itemCount: documents.length,
                 itemBuilder: (context, index) {
                   final doc = documents[index];
-                  return ListTile(
-                    title: Text(doc['doc_title'] ?? 'No Title'),
-                    subtitle: Text(
-                      'Document Number: ${doc['doc_number'] ?? 'No Number'}',
+                  return Card(
+                    elevation: 3,
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    child: ListTile(
+                      title: Text(
+                        doc['doc_number'] ?? 'No Document Number',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            doc['doc_title'] ?? 'No Title',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Verdict: ${doc['verdict'] ?? 'No Verdict'}',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () =>
+                            showDeleteConfirmation(doc['doc_id'] ?? ''),
+                      ),
                     ),
                   );
                 },
               );
             } else {
-              return Center(child: Text('No data associated with this sack.'));
+              return Center(
+                  child: Text('No documents associated with this sack.'));
             }
           },
         ),
       ),
       actions: [
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
           onPressed: () => Navigator.pop(context),
           child: Text('Close'),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green, foregroundColor: Colors.white),
           onPressed: () => showDialog(
             context: context,
             builder: (context) {
@@ -104,16 +185,16 @@ class _SackContentState extends State<SackContent> {
                 sackId: widget.sackId,
                 onDocumentAdded: () {
                   setState(() {
-                    futureDocuments =
-                        fetchDocuments(widget.sackId); // Refresh the future
+                    futureDocuments = fetchDocuments(widget.sackId);
                   });
                 },
               );
             },
           ),
-          child: Text('Add'),
+          child: Text('Add Document'),
         ),
       ],
+      actionsAlignment: MainAxisAlignment.spaceAround,
     );
   }
 }
