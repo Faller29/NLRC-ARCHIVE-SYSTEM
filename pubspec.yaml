@@ -37,6 +37,7 @@ dependencies:
   window_manager: ^0.4.3
   shimmer_animation: ^2.1.0+1
   intl: ^0.20.1
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
