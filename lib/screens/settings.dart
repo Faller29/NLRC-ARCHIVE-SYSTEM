@@ -258,7 +258,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   validator: (value) {
                     if (value == null ||
                         value.isEmpty ||
-                        passwordConfirmController != passwordController) {
+                        passwordConfirmController.text !=
+                            passwordController.text) {
                       return 'Password do not match';
                     }
                     return null;
