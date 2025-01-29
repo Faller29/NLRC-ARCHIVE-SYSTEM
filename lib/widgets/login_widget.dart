@@ -22,7 +22,7 @@ class _logInWidgetPage extends State<LoginWidget> {
     if (_usernameController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all fields')),
+        snackBarFailed('Please fill all fields', context),
       );
       return;
     }
@@ -41,7 +41,7 @@ class _logInWidgetPage extends State<LoginWidget> {
       var arbiterRoom = data['room'];
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Log In Successfully')),
+        snackBarSuccess('Log In Successfully', context),
       );
 
       // Pass arbi_id to ScreenWrapper
@@ -54,7 +54,7 @@ class _logInWidgetPage extends State<LoginWidget> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Username & Password Incorrect')),
+        snackBarFailed('Username & Password Incorrect', context),
       );
     }
   }

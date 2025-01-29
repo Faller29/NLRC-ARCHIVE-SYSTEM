@@ -47,7 +47,8 @@ class _SackContentState extends State<SackContent> {
     }
   }
 
-  Future<void> deleteDocument(String docId) async {
+  Future<void> deleteDocument(var docId) async {
+    print(docId);
     try {
       final response = await http.post(
         Uri.parse('http://localhost/nlrc_archive_api/delete_document.php'),
@@ -75,7 +76,7 @@ class _SackContentState extends State<SackContent> {
     }
   }
 
-  void showDeleteConfirmation(String docId) {
+  void showDeleteConfirmation(var docId) {
     showDialog(
       context: context,
       builder: (context) {
@@ -90,6 +91,7 @@ class _SackContentState extends State<SackContent> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
               ),
               onPressed: () {
                 Navigator.pop(context);
@@ -130,6 +132,7 @@ class _SackContentState extends State<SackContent> {
                 itemCount: documents.length,
                 itemBuilder: (context, index) {
                   final doc = documents[index];
+
                   return Card(
                     elevation: 3,
                     margin: EdgeInsets.symmetric(vertical: 8),
@@ -141,14 +144,48 @@ class _SackContentState extends State<SackContent> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            doc['doc_title'] ?? 'No Title',
-                            style: TextStyle(fontSize: 14),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  doc['doc_complainant'] ?? 'No complaint',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  'VERSUS',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  doc['doc_respondent'] ?? 'No respondent',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Verdict: ${doc['verdict'] ?? 'No Verdict'}',
-                            style: TextStyle(color: Colors.grey),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Verdict: ${doc['verdict']!.isEmpty ? 'No Verdict' : doc['verdict']}',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              Text(
+                                'Volume: ${doc['doc_volume'] ?? 'No volume'}',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
                           ),
                         ],
                       ),

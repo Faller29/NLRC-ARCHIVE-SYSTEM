@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:nlrc_archive/screens/screen_wrapper.dart';
 import 'package:nlrc_archive/widgets/login_widget.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
 import 'package:http/http.dart' as http;
@@ -23,9 +24,11 @@ class AddDocument extends StatefulWidget {
 class _AddDocumentState extends State<AddDocument> {
   final TextEditingController _documentNumberController =
       TextEditingController();
-  final TextEditingController _documentTitleController =
-      TextEditingController();
+  final TextEditingController _comlainantController = TextEditingController();
+  final TextEditingController _respondentController = TextEditingController();
   final TextEditingController _documentVerdictController =
+      TextEditingController();
+  final TextEditingController _documentVolumeController =
       TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -34,11 +37,13 @@ class _AddDocumentState extends State<AddDocument> {
       final data = {
         'sack_id': widget.sackId,
         'doc_number': _documentNumberController.text.trim(),
-        'doc_title': _documentTitleController.text.trim(),
+        'doc_repondent': _respondentController.text.trim(),
+        'doc_complainant': _comlainantController.text.trim(),
         'doc_verdict': _documentVerdictController.text.trim(),
         'status': 'Stored',
+        'doc_version': adminType == null ? 'old' : 'new',
+        'doc_volume': _documentVolumeController.text.trim(),
       };
-
       try {
         final response = await http.post(
           Uri.parse('http://localhost/nlrc_archive_api/add_document.php'),
@@ -80,42 +85,75 @@ class _AddDocumentState extends State<AddDocument> {
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFieldBoxWidget(
-                controller: _documentNumberController,
-                labelText: 'Document Number',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter Document Number';
-                  }
+          child: Container(
+            width: MediaQuery.sizeOf(context).width / 4,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFieldBoxWidget(
+                  controller: _documentNumberController,
+                  labelText: 'Case Number',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter Document Number';
+                    }
 
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16.0),
-              TextFieldBoxWidget(
-                controller: _documentTitleController,
-                labelText: 'Document Title',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter Document Title';
-                  }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16.0),
+                TextFieldBoxWidget(
+                  controller: _comlainantController,
+                  labelText: 'Complainant',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter Complainant';
+                    }
 
-                  return null;
-                },
-                onFieldSubmitted: (_) => null,
-              ),
-              const SizedBox(
-                height: 16.0,
-                width: 300,
-              ),
-              TextFieldBoxWidget(
-                controller: _documentVerdictController,
-                labelText: 'Verdict (Optional)',
-              )
-            ],
+                    return null;
+                  },
+                  onFieldSubmitted: (_) => null,
+                ),
+                const SizedBox(height: 16.0),
+                Text(
+                  'VERSUS',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TextFieldBoxWidget(
+                  controller: _respondentController,
+                  labelText: 'Respondent',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter Respondent';
+                    }
+
+                    return null;
+                  },
+                  onFieldSubmitted: (_) => null,
+                ),
+                const SizedBox(height: 16.0),
+                TextFieldBoxWidget(
+                  controller: _documentVolumeController,
+                  labelText: 'Volume',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter Volume';
+                    }
+
+                    return null;
+                  },
+                  onFieldSubmitted: (_) => null,
+                ),
+                const SizedBox(height: 16.0),
+                TextFieldBoxWidget(
+                  controller: _documentVerdictController,
+                  labelText: 'Verdict (Optional)',
+                )
+              ],
+            ),
           ),
         ),
       ),

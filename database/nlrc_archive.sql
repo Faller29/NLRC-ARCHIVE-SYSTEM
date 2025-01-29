@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 23, 2025 at 07:52 AM
+-- Generation Time: Jan 29, 2025 at 08:24 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -51,8 +51,25 @@ CREATE TABLE `tbl_arbi_user` (
 --
 
 INSERT INTO `tbl_arbi_user` (`arbi_id`, `arbi_name`, `room`) VALUES
-(14, 'LA Sapallo', '1'),
 (19, 'LA Renzy', '1');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tbl_archived`
+--
+
+CREATE TABLE `tbl_archived` (
+  `archived_id` int(11) NOT NULL,
+  `doc_id` int(11) NOT NULL,
+  `doc_name` varchar(255) NOT NULL,
+  `doc_complainant` varchar(255) DEFAULT NULL,
+  `doc_respondent` varchar(255) DEFAULT NULL,
+  `verdict` text DEFAULT NULL,
+  `archived_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` varchar(50) DEFAULT 'Archived',
+  `arbi_number` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -64,19 +81,23 @@ CREATE TABLE `tbl_document` (
   `doc_id` int(11) NOT NULL,
   `sack_id` int(11) NOT NULL,
   `doc_number` varchar(40) NOT NULL,
-  `doc_title` varchar(255) NOT NULL,
+  `doc_complainant` varchar(255) NOT NULL,
+  `doc_respondent` varchar(255) NOT NULL,
   `verdict` varchar(50) DEFAULT NULL,
-  `status` varchar(255) NOT NULL
+  `status` varchar(255) NOT NULL,
+  `version` varchar(255) NOT NULL,
+  `volume` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tbl_document`
 --
 
-INSERT INTO `tbl_document` (`doc_id`, `sack_id`, `doc_number`, `doc_title`, `verdict`, `status`) VALUES
-(26, 43, '234', '12', '', 'Stored'),
-(27, 45, 'qwe', 'qwe', '', 'Stored'),
-(28, 46, 'RAB-02012024-001', 'SAPALLO VS CCC', '', 'Stored');
+INSERT INTO `tbl_document` (`doc_id`, `sack_id`, `doc_number`, `doc_complainant`, `doc_respondent`, `verdict`, `status`, `version`, `volume`) VALUES
+(30, 51, 'LA-SAPALLO11', 'SAPALLO', 'CCC', '', 'Stored', 'old', ''),
+(31, 51, 'LA-SAPALLO12', 'SAPALLO', 'RENZY', '', 'Stored', 'old', ''),
+(32, 51, 'LA-SAPALLO13', 'SAPALLO', 'FALLER', 'CLOSE', 'Stored', 'old', ''),
+(33, 53, 'RAB-IV-11-16470-02-C', 'EDUARDO R. NAVARRO JR.', 'PACIFIC ACTIVATED CARBON CO.', '', 'Retrieved', 'old', '1, 2');
 
 -- --------------------------------------------------------
 
@@ -111,10 +132,8 @@ CREATE TABLE `tbl_sack` (
 --
 
 INSERT INTO `tbl_sack` (`sack_id`, `sack_name`, `arbiter_number`, `location`, `status`, `admin_message`) VALUES
-(43, 'LA SAPALLO - 2025124', 'LA Sapallo', NULL, 'Stored', NULL),
-(44, '1234', 'LA Renzy', NULL, 'Stored', 'qwe'),
-(45, '123', 'LA Sapallo', NULL, 'Stored', 'qwe'),
-(46, 'LA-SAPALLO-2024', 'LA Sapallo', NULL, 'Stored', NULL);
+(51, 'Sack 1', 'LA Sapallo', NULL, 'Stored', NULL),
+(53, 'SACK 17', 'LA Renzy', NULL, 'Stored', NULL);
 
 -- --------------------------------------------------------
 
@@ -154,6 +173,13 @@ ALTER TABLE `tbl_approval`
 --
 ALTER TABLE `tbl_arbi_user`
   ADD PRIMARY KEY (`arbi_id`);
+
+--
+-- Indexes for table `tbl_archived`
+--
+ALTER TABLE `tbl_archived`
+  ADD PRIMARY KEY (`archived_id`),
+  ADD KEY `doc_id` (`doc_id`);
 
 --
 -- Indexes for table `tbl_document`
@@ -203,10 +229,16 @@ ALTER TABLE `tbl_arbi_user`
   MODIFY `arbi_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
+-- AUTO_INCREMENT for table `tbl_archived`
+--
+ALTER TABLE `tbl_archived`
+  MODIFY `archived_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `tbl_document`
 --
 ALTER TABLE `tbl_document`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `tbl_request`
@@ -218,7 +250,7 @@ ALTER TABLE `tbl_request`
 -- AUTO_INCREMENT for table `tbl_sack`
 --
 ALTER TABLE `tbl_sack`
-  MODIFY `sack_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `sack_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT for table `tbl_user_account`
@@ -236,6 +268,12 @@ ALTER TABLE `tbl_user_account`
 ALTER TABLE `tbl_approval`
   ADD CONSTRAINT `tbl_approval_ibfk_1` FOREIGN KEY (`acc_id`) REFERENCES `tbl_user_account` (`acc_id`),
   ADD CONSTRAINT `tbl_approval_ibfk_2` FOREIGN KEY (`sack_id`) REFERENCES `tbl_sack` (`sack_id`);
+
+--
+-- Constraints for table `tbl_archived`
+--
+ALTER TABLE `tbl_archived`
+  ADD CONSTRAINT `tbl_archived_ibfk_1` FOREIGN KEY (`doc_id`) REFERENCES `tbl_document` (`doc_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `tbl_document`

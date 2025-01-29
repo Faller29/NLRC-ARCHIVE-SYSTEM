@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:nlrc_archive/screens/login_page.dart';
+import 'package:nlrc_archive/sql_functions/sql_homepage.dart';
 import 'package:window_manager/window_manager.dart';
+
+List<Map<String, dynamic>> previousDocuments = [];
+List<Map<String, dynamic>> documents = [];
+List<dynamic> sackCreatedList = [];
+List<dynamic> sackPendingList = [];
+String query = '';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +18,7 @@ Future<void> main() async {
     await windowManager.setMinimumSize(Size(1421, 799.31));
     await windowManager.show();
   });
+
   runApp(const MyApp());
 }
 

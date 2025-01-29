@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:nlrc_archive/data/themeData.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/modals/sack_content.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
 import 'package:nlrc_archive/sql_functions/sql_homepage.dart';
@@ -16,23 +19,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final today = DateFormat('EEEE, MMMM, dd, yyyy').format(DateTime.now());
   String nlrc = "National Labor Relations Commission";
-  List<dynamic> sackCreatedList = [];
-  List<dynamic> sackPendingList = [];
 
   String? _selectedArbiter;
   final TextEditingController _sackId = TextEditingController();
   TextEditingController rejectReason = TextEditingController();
 
   List<dynamic> _arbiterChoices = [];
-  String _query = '';
-  late Future<List<Map<String, dynamic>>> _documents;
+  late Timer _timer;
+  //List<Map<String, dynamic>> documents = [];
   @override
   void initState() {
-    fetchCreatedSack();
     fetchArbiters();
-    fetchPendingSack();
+    _startPolling();
     super.initState();
-    _documents = fetchDocuments(_query);
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   Future<void> fetchArbiters() async {
@@ -57,49 +62,6 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (error) {
       print("Error fetching arbiters: $error");
-    }
-  }
-
-  Future<void> fetchCreatedSack() async {
-    var url = "http://localhost/nlrc_archive_api/retrieve_created_sack.php";
-    try {
-      var response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        setState(() {
-          sackCreatedList = data;
-        });
-        print(sackCreatedList);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch data')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
-    }
-  }
-
-  Future<void> fetchPendingSack() async {
-    var url = "http://localhost/nlrc_archive_api/retrieve_pending_sack.php";
-    try {
-      var response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        setState(() {
-          sackPendingList = data;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch data')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
     }
   }
 
@@ -245,6 +207,64 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  _startPolling() async {
+    _timer = Timer.periodic(Duration(seconds: 30), (timer) async {
+      if (!isFetching) {
+        fetchDocuments(query).then((data) {
+          if (!_listsAreEqual(documents, data)) {
+            setState(() {
+              documents = data;
+            });
+          }
+        });
+
+        fetchCreatedSack().then((data) {
+          if (!_listsAreEqual(sackCreatedList, data)) {
+            setState(() {
+              sackCreatedList = data;
+            });
+          }
+        });
+
+        fetchPendingSack().then((data) {
+          if (!_listsAreEqual(sackPendingList, data)) {
+            setState(() {
+              sackPendingList = data;
+            });
+          }
+        });
+      }
+    });
+  }
+
+  bool _listsAreEqual(var list1, var list2) {
+    if (list1.length != list2.length) {
+      return false;
+    }
+
+    for (int i = 0; i < list1.length; i++) {
+      if (!_mapEquals(list1[i], list2[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool _mapEquals(var map1, var map2) {
+    if (map1.keys.length != map2.keys.length) {
+      return false;
+    }
+
+    for (var key in map1.keys) {
+      if (map1[key] != map2[key]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -335,11 +355,12 @@ class _HomePageState extends State<HomePage> {
                               child: TextField(
                                 onChanged: (value) {
                                   setState(() {
-                                    _query = value;
+                                    query = value;
                                   });
                                 },
                                 decoration: InputDecoration(
-                                  hintText: 'Search Document',
+                                  hintText:
+                                      'Search Case number, Complainant, or Respondent',
                                   prefixIcon: Icon(Icons.search),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -353,7 +374,7 @@ class _HomePageState extends State<HomePage> {
                             child: Container(
                               width: 600,
                               child: FutureBuilder<List<Map<String, dynamic>>>(
-                                future: fetchDocuments(_query),
+                                future: fetchDocuments(query),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
@@ -369,7 +390,13 @@ class _HomePageState extends State<HomePage> {
                                         child: Text('No documents found.'));
                                   }
 
-                                  final documents = snapshot.data!;
+                                  //final documents = snapshot.data!;
+                                  documents = snapshot.data!;
+
+                                  documents.sort((a, b) {
+                                    return (a['doc_complainant'] ?? '')
+                                        .compareTo(b['doc_complainant'] ?? '');
+                                  });
                                   return ListView.builder(
                                     itemCount: documents.length,
                                     itemBuilder: (context, index) {
@@ -377,23 +404,331 @@ class _HomePageState extends State<HomePage> {
 
                                       final sackName =
                                           doc['sack_name'] ?? 'No Sack Name';
-                                      final docTitle =
-                                          doc['doc_title'] ?? 'No Title';
+                                      final doc_complainant =
+                                          doc['doc_complainant'] ??
+                                              'No complainant';
+                                      final doc_respondent =
+                                          doc['doc_respondent'] ??
+                                              'No respondent';
                                       final docStatus =
                                           doc['status'] ?? 'Unknown';
-                                      final verdict = doc['verdict'] ?? 'N/A';
+                                      final verdict =
+                                          "${doc['verdict']!.isEmpty ? 'No Verdict' : doc['verdict']}";
+                                      final arbiName =
+                                          doc['arbi_name'] ?? 'No arbiter';
+                                      final docId =
+                                          doc['doc_id'] ?? 'No document Id';
+
+                                      String docName =
+                                          doc['doc_name'] ?? 'No document name';
+                                      String docVolume =
+                                          "${doc['volume']!.isEmpty ? 'No volume' : doc['volume']}";
+                                      String version =
+                                          "${doc['version']}" ?? 'No';
 
                                       return Card(
                                         color: Colors.grey[300],
-                                        child: ListTile(
-                                          title: Text(docTitle),
-                                          subtitle: Column(
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 8.0, horizontal: 16.0),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Text('Sack Name: $sackName'),
-                                              Text('Verdict: $verdict'),
-                                              Text('Status: $docStatus'),
+                                              // Title Row
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Text(
+                                                        "$doc_complainant",
+                                                        style: TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        "vs",
+                                                        style: TextStyle(
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            height: 0.5),
+                                                      ),
+                                                      Text(
+                                                        "$doc_respondent",
+                                                        style: TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      horizontal: 12.0,
+                                                      vertical: 6.0,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: docStatus ==
+                                                              'Stored'
+                                                          ? Colors.green[100]
+                                                          : Colors.red[100],
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12.0),
+                                                    ),
+                                                    child: Text(
+                                                      docStatus,
+                                                      style: TextStyle(
+                                                        color: docStatus ==
+                                                                'Stored'
+                                                            ? Colors.green[800]
+                                                            : Colors.red[800],
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8.0),
+
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    "Case #: ${docName.toUpperCase()}",
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.grey[800],
+                                                    ),
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        'Volume: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        '${docVolume}',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+
+                                              const SizedBox(height: 8.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Icon(Icons.storage,
+                                                          size: 16,
+                                                          color:
+                                                              Colors.grey[600]),
+                                                      const SizedBox(
+                                                          width: 6.0),
+                                                      Text(
+                                                        'Arbiter: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        arbiName,
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.black),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      /* Icon(Icons.storage,
+                                                          size: 16,
+                                                          color:
+                                                              Colors.grey[600]), */
+                                                      const SizedBox(
+                                                          width: 6.0),
+                                                      Text(
+                                                        'Storage: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        sackName,
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.black),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 6.0),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Icon(Icons.gavel,
+                                                          size: 16,
+                                                          color:
+                                                              Colors.grey[600]),
+                                                      const SizedBox(
+                                                          width: 6.0),
+                                                      Text(
+                                                        'Verdict: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        verdict,
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.black),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      /* Text(
+                                                        'Version: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ), */
+                                                      Text(
+                                                        "${version.capitalize()} version",
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[800],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              Divider(),
+                                              Row(
+                                                children: [
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (context) {
+                                                          return AlertDialog(
+                                                            title: Text(
+                                                              '$docName',
+                                                              style: TextStyle(
+                                                                  fontSize: 18),
+                                                            ),
+                                                            content: Column(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                Text(
+                                                                    'Request archive for retrieval'),
+                                                              ],
+                                                            ),
+                                                            actions: [
+                                                              ElevatedButton(
+                                                                onPressed: () =>
+                                                                    Navigator.pop(
+                                                                        context),
+                                                                child: Text(
+                                                                    'Cancel'),
+                                                              ),
+                                                              ElevatedButton(
+                                                                onPressed:
+                                                                    () async {
+                                                                  bool success =
+                                                                      await requestRetrieval(
+                                                                          docId);
+
+                                                                  if (success) {
+                                                                    ScaffoldMessenger.of(
+                                                                            context)
+                                                                        .showSnackBar(
+                                                                      SnackBar(
+                                                                        content:
+                                                                            Text('Retrieval request sent!'),
+                                                                      ),
+                                                                    );
+                                                                  } else {
+                                                                    ScaffoldMessenger.of(
+                                                                            context)
+                                                                        .showSnackBar(
+                                                                      SnackBar(
+                                                                        content:
+                                                                            Text('Failed to request retrieval'),
+                                                                      ),
+                                                                    );
+                                                                  }
+
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                },
+                                                                child: Text(
+                                                                    'Confirm'),
+                                                              ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                    child: Text('Request'),
+                                                  ),
+                                                ],
+                                              )
                                             ],
                                           ),
                                         ),
@@ -403,7 +738,7 @@ class _HomePageState extends State<HomePage> {
                                 },
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -437,209 +772,231 @@ class _HomePageState extends State<HomePage> {
                                       width:
                                           MediaQuery.sizeOf(context).width / 2 -
                                               100,
-                                      child: sackCreatedList.isEmpty
-                                          ? Center(
-                                              child: Text(
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 14,
-                                                      color: Colors.grey),
-                                                  'There is no records found'))
-                                          : ListView.builder(
-                                              shrinkWrap: true,
-                                              physics:
-                                                  NeverScrollableScrollPhysics(),
-                                              itemCount: sackCreatedList.length,
-                                              itemBuilder: (context, index) {
-                                                final sack =
-                                                    sackCreatedList[index];
+                                      child: FutureBuilder<List<dynamic>>(
+                                          future: fetchCreatedSack(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return Center(
+                                                  child:
+                                                      CircularProgressIndicator());
+                                            } else if (snapshot.hasError) {
+                                              return Center(
+                                                  child: Text(
+                                                      'Error: ${snapshot.error}'));
+                                            } else if (!snapshot.hasData ||
+                                                snapshot.data!.isEmpty) {
+                                              return Center(
+                                                  child: Text(
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 14,
+                                                          color: Colors.grey),
+                                                      'There is no records found'));
+                                            }
+                                            sackCreatedList = snapshot.data!;
+                                            return sackCreatedList.isEmpty
+                                                ? Center(
+                                                    child: Text(
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 14,
+                                                            color: Colors.grey),
+                                                        'There is no records found'))
+                                                : ListView.builder(
+                                                    shrinkWrap: true,
+                                                    physics:
+                                                        NeverScrollableScrollPhysics(),
+                                                    itemCount:
+                                                        sackCreatedList.length,
+                                                    itemBuilder:
+                                                        (context, index) {
+                                                      final sack =
+                                                          sackCreatedList[
+                                                              index];
 
-                                                bool isRejected =
-                                                    sack['status'] == 'Reject';
+                                                      bool isRejected =
+                                                          sack['status'] ==
+                                                              'Reject';
 
-                                                return Column(
-                                                  children: [
-                                                    Container(
-                                                      color: isRejected
-                                                          ? Colors.red
-                                                          : Colors.transparent,
-                                                      child: ListTile(
-                                                        title: Text(
-                                                          sack['sack_name'] ??
-                                                              'No Sack Name',
-                                                          style: TextStyle(
-                                                            fontSize: 16,
+                                                      return Column(
+                                                        children: [
+                                                          Container(
                                                             color: isRejected
-                                                                ? Colors.white
-                                                                : Colors.black,
-                                                          ),
-                                                        ),
-                                                        subtitle: Column(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Text(
-                                                              sack['arbiter_number'] ??
-                                                                  'No Arbiter Name',
-                                                              style: TextStyle(
-                                                                fontSize: 14,
-                                                                color: isRejected
-                                                                    ? Colors
-                                                                        .white70
-                                                                    : Colors
-                                                                        .grey,
-                                                              ),
-                                                            ),
-                                                            if (isRejected)
-                                                              Text(
-                                                                "Rejected: ${sack['admin_message'] ?? 'No reason provided'}",
+                                                                ? Colors.red
+                                                                : Colors
+                                                                    .transparent,
+                                                            child: ListTile(
+                                                              title: Text(
+                                                                sack['sack_name'] ??
+                                                                    'No Sack Name',
                                                                 style:
                                                                     TextStyle(
-                                                                  fontSize: 14,
-                                                                  fontStyle:
-                                                                      FontStyle
-                                                                          .italic,
-                                                                  color: Colors
-                                                                      .white70,
+                                                                  fontSize: 16,
+                                                                  color: isRejected
+                                                                      ? Colors
+                                                                          .white
+                                                                      : Colors
+                                                                          .black,
                                                                 ),
                                                               ),
-                                                          ],
-                                                        ),
-                                                        trailing: Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: [
-                                                            IconButton(
-                                                              icon: Icon(
-                                                                Icons.delete,
-                                                                color: isRejected
-                                                                    ? Colors
-                                                                        .white
-                                                                    : Colors
-                                                                        .red,
+                                                              subtitle: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Text(
+                                                                    sack['arbiter_number'] ??
+                                                                        'No Arbiter Name',
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontSize:
+                                                                          14,
+                                                                      color: isRejected
+                                                                          ? Colors
+                                                                              .white70
+                                                                          : Colors
+                                                                              .grey,
+                                                                    ),
+                                                                  ),
+                                                                  if (isRejected)
+                                                                    Text(
+                                                                      "Rejected: ${sack['admin_message'] ?? 'No reason provided'}",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                        fontStyle:
+                                                                            FontStyle.italic,
+                                                                        color: Colors
+                                                                            .white70,
+                                                                      ),
+                                                                    ),
+                                                                ],
                                                               ),
-                                                              onPressed: () =>
+                                                              trailing: Row(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .min,
+                                                                children: [
+                                                                  IconButton(
+                                                                    icon: Icon(
+                                                                      Icons
+                                                                          .delete,
+                                                                      color: isRejected
+                                                                          ? Colors
+                                                                              .white
+                                                                          : Colors
+                                                                              .red,
+                                                                    ),
+                                                                    onPressed: () =>
+                                                                        showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          ((context) {
+                                                                        return AlertDialog(
+                                                                          contentPadding: EdgeInsets.symmetric(
+                                                                              vertical: 40,
+                                                                              horizontal: 30),
+                                                                          title:
+                                                                              Text('Delete ${sack['sack_name']}'),
+                                                                          content:
+                                                                              Text('Are you sure you want to delete ${sack['sack_name']}?'),
+                                                                          actions: [
+                                                                            ElevatedButton(
+                                                                              style: ElevatedButton.styleFrom(
+                                                                                backgroundColor: Colors.redAccent,
+                                                                                foregroundColor: Colors.white,
+                                                                              ),
+                                                                              onPressed: () => Navigator.pop(context),
+                                                                              child: Text('Cancel'),
+                                                                            ),
+                                                                            ElevatedButton(
+                                                                              style: ElevatedButton.styleFrom(
+                                                                                backgroundColor: Colors.green,
+                                                                                foregroundColor: Colors.white,
+                                                                              ),
+                                                                              onPressed: () => deleteSack(
+                                                                                sack['sack_id'].toString(),
+                                                                                index,
+                                                                              ),
+                                                                              child: Text('Confirm'),
+                                                                            ),
+                                                                          ],
+                                                                          actionsAlignment:
+                                                                              MainAxisAlignment.spaceBetween,
+                                                                        );
+                                                                      }),
+                                                                    ),
+                                                                  ),
+                                                                  IconButton(
+                                                                    icon: Icon(
+                                                                      Icons
+                                                                          .send,
+                                                                      color: isRejected
+                                                                          ? Colors
+                                                                              .white
+                                                                          : Colors
+                                                                              .green,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () async {
+                                                                      final sackId =
+                                                                          sack['sack_id']
+                                                                              .toString();
+                                                                      final response =
+                                                                          await sendForApproval(
+                                                                              sackId);
+
+                                                                      if (response[
+                                                                              'status'] ==
+                                                                          'success') {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          SnackBar(
+                                                                              content: Text('Sack sent for approval')),
+                                                                        );
+                                                                        setState(
+                                                                            () {
+                                                                          sack['status'] =
+                                                                              'pending';
+                                                                        });
+                                                                      } else {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          SnackBar(
+                                                                              content: Text('${response['message']}')),
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              onTap: () =>
                                                                   showDialog(
                                                                 context:
                                                                     context,
                                                                 builder:
-                                                                    ((context) {
-                                                                  return AlertDialog(
-                                                                    contentPadding: EdgeInsets.symmetric(
-                                                                        vertical:
-                                                                            40,
-                                                                        horizontal:
-                                                                            30),
-                                                                    title: Text(
-                                                                        'Delete ${sack['sack_name']}'),
-                                                                    content: Text(
-                                                                        'Are you sure you want to delete ${sack['sack_name']}?'),
-                                                                    actions: [
-                                                                      ElevatedButton(
-                                                                        style: ElevatedButton
-                                                                            .styleFrom(
-                                                                          backgroundColor:
-                                                                              Colors.redAccent,
-                                                                          foregroundColor:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () =>
-                                                                                Navigator.pop(context),
-                                                                        child: Text(
-                                                                            'Cancel'),
-                                                                      ),
-                                                                      ElevatedButton(
-                                                                        style: ElevatedButton
-                                                                            .styleFrom(
-                                                                          backgroundColor:
-                                                                              Colors.green,
-                                                                          foregroundColor:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () =>
-                                                                                deleteSack(
-                                                                          sack['sack_id']
-                                                                              .toString(),
-                                                                          index,
-                                                                        ),
-                                                                        child: Text(
-                                                                            'Confirm'),
-                                                                      ),
-                                                                    ],
-                                                                    actionsAlignment:
-                                                                        MainAxisAlignment
-                                                                            .spaceBetween,
+                                                                    (context) {
+                                                                  return SackContent(
+                                                                    sackId: sack[
+                                                                        'sack_id'],
+                                                                    sackName: sack[
+                                                                        'sack_name'],
                                                                   );
-                                                                }),
+                                                                },
                                                               ),
                                                             ),
-                                                            IconButton(
-                                                              icon: Icon(
-                                                                Icons.send,
-                                                                color: isRejected
-                                                                    ? Colors
-                                                                        .white
-                                                                    : Colors
-                                                                        .green,
-                                                              ),
-                                                              onPressed:
-                                                                  () async {
-                                                                final sackId = sack[
-                                                                        'sack_id']
-                                                                    .toString();
-                                                                final response =
-                                                                    await sendForApproval(
-                                                                        sackId);
-
-                                                                if (response[
-                                                                        'status'] ==
-                                                                    'success') {
-                                                                  ScaffoldMessenger.of(
-                                                                          context)
-                                                                      .showSnackBar(
-                                                                    SnackBar(
-                                                                        content:
-                                                                            Text('Sack sent for approval')),
-                                                                  );
-                                                                  setState(() {
-                                                                    sack['status'] =
-                                                                        'pending';
-                                                                  });
-                                                                } else {
-                                                                  ScaffoldMessenger.of(
-                                                                          context)
-                                                                      .showSnackBar(
-                                                                    SnackBar(
-                                                                        content:
-                                                                            Text('${response['message']}')),
-                                                                  );
-                                                                }
-                                                              },
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        onTap: () => showDialog(
-                                                          context: context,
-                                                          builder: (context) {
-                                                            return SackContent(
-                                                              sackId: sack[
-                                                                  'sack_id'],
-                                                              sackName: sack[
-                                                                  'sack_name'],
-                                                            );
-                                                          },
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Divider(),
-                                                  ],
-                                                );
-                                              },
-                                            ),
+                                                          ),
+                                                          Divider(),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                          }),
                                     ),
                                   )
                                 ],
@@ -810,17 +1167,32 @@ class _HomePageState extends State<HomePage> {
                                 height: 10,
                               ),
                               Expanded(
-                                child: sackPendingList.isEmpty
-                                    ? Center(
-                                        child: Text(
-                                          'No pending sacks found.',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
+                                child: FutureBuilder<List<dynamic>>(
+                                    future: fetchPendingSack(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return Center(
+                                            child: CircularProgressIndicator());
+                                      } else if (snapshot.hasError) {
+                                        return Center(
+                                            child: Text(
+                                                'Error: ${snapshot.error}'));
+                                      } else if (!snapshot.hasData ||
+                                          snapshot.data!.isEmpty) {
+                                        return Center(
+                                            child: Center(
+                                          child: Text(
+                                            'No pending sacks found.',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                            ),
                                           ),
-                                        ),
-                                      )
-                                    : ListView.builder(
+                                        ));
+                                      }
+                                      sackPendingList = snapshot.data!;
+                                      return ListView.builder(
                                         itemCount: sackPendingList.length,
                                         itemBuilder: (context, index) {
                                           final sack = sackPendingList[index];
@@ -863,13 +1235,19 @@ class _HomePageState extends State<HomePage> {
                                                             Icons.check,
                                                             color: Colors.green,
                                                           ),
-                                                          onPressed: () {
+                                                          onPressed: () async {
                                                             final sackId =
                                                                 sack['sack_id'];
                                                             if (sackId !=
                                                                 null) {
-                                                              updateSackStatus(
-                                                                  sackId);
+                                                              await updateSackStatus(
+                                                                      sackId)
+                                                                  .then(
+                                                                      (_) async {
+                                                                setState(() {
+                                                                  //ref
+                                                                });
+                                                              });
                                                             }
                                                           },
                                                         ),
@@ -878,12 +1256,12 @@ class _HomePageState extends State<HomePage> {
                                                             Icons.close,
                                                             color: Colors.red,
                                                           ),
-                                                          onPressed: () {
+                                                          onPressed: () async {
                                                             final sackId =
                                                                 sack['sack_id'];
                                                             if (sackId !=
                                                                 null) {
-                                                              rejectSack(
+                                                              await rejectSack(
                                                                   sackId);
                                                             }
                                                           },
@@ -895,7 +1273,8 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           );
                                         },
-                                      ),
+                                      );
+                                    }),
                               ),
                             ],
                           ),
@@ -933,7 +1312,11 @@ class _HomePageState extends State<HomePage> {
             ),
             TextButton(
               onPressed: () async {
-                await rejectPending(sackId);
+                await rejectPending(sackId).then((_) {
+                  setState(() {
+                    //ref
+                  });
+                });
                 rejectReason.clear();
                 Navigator.pop(context);
               },

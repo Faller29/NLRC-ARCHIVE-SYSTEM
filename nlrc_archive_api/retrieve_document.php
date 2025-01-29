@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     
-    $sql = "SELECT doc_title, doc_number FROM tbl_document WHERE sack_id = ?";
+    $sql = "SELECT doc_complainant, doc_respondent, doc_number, verdict, doc_id, volume FROM tbl_document WHERE sack_id = ?";
     $stmt = mysqli_prepare($conn, $sql);
 
     if ($stmt) {
@@ -31,14 +31,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         mysqli_stmt_execute($stmt);
 
         
-        mysqli_stmt_bind_result($stmt, $doc_title, $doc_number);
+        mysqli_stmt_bind_result($stmt, $doc_complainant,$doc_respondent, $doc_number, $verdict, $doc_id, $doc_volume);
 
         
         $documents = [];
         while (mysqli_stmt_fetch($stmt)) {
             $documents[] = [
-                'doc_title' => $doc_title,
+                'doc_id' => $doc_id,
+                'doc_complainant' => $doc_complainant,
+                'doc_respondent' => $doc_respondent,
                 'doc_number' => $doc_number,
+                'verdict' => $verdict,
+                'doc_volume' => $doc_volume,
+
+
             ];
         }
 

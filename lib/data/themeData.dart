@@ -44,3 +44,9 @@ SnackBar snackBarSuccess(String text, BuildContext context) {
     duration: Duration(seconds: 3),
   );
 }
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+  }
+}
