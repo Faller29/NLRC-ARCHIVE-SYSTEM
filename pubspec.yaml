@@ -39,6 +39,7 @@ dependencies:
   intl: ^0.20.1
   http: ^1.2.2
   web_socket_client: ^0.1.5
+  file_picker: ^5.2.5
 
 dev_dependencies:
   flutter_test:
