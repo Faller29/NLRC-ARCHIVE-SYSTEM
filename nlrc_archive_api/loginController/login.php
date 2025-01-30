@@ -8,7 +8,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 
     
     $sql = "
-        SELECT u.arbi_id, a.arbi_name, a.room
+        SELECT u.arbi_id, a.arbi_name, a.room, u.acc_id
         FROM tbl_user_account u
         LEFT JOIN tbl_arbi_user a ON u.arbi_id = a.arbi_id
         WHERE u.username = '$username' AND u.password = '$password'
@@ -27,12 +27,16 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
         $arbi_id = $row['arbi_id'];
         $arbi_name = $row['arbi_name'];
         $room = $row['room'];
+        $acc_id = $row['acc_id'];
+
 
         echo json_encode([
             "status" => "Success",
             "arbi_id" => $arbi_id,
             "arbi_name" => $arbi_name,
-            "room" => $room
+            "room" => $room,
+            "acc_id" => $acc_id
+            
         ]);
     } else {
         echo json_encode(["status" => "Error"]);

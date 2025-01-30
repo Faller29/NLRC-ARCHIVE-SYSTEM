@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 $con = dbconnection(); 
 
 $query = isset($_GET['Query']) ? $_GET['Query'] : ''; 
+$user = isset($_GET['User']) ? $_GET['User'] : null; // Add user parameter
 
 $sql = "SELECT 
             s.sack_id, 
@@ -21,7 +22,12 @@ $sql = "SELECT
             d.doc_number
         FROM tbl_document d
         JOIN tbl_sack s ON s.sack_id = d.sack_id
-        WHERE s.status = 'Stored'";  
+        WHERE s.status = 'Stored'";
+
+// Modify query based on user
+if ($user != null) {
+    $sql .= " AND s.arbiter_number = '$user'";
+}
 
 if ($query != '') {
     $escapedQuery = mysqli_real_escape_string($con, $query);

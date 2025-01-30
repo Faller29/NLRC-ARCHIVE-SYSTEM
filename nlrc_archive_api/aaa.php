@@ -1,0 +1,1 @@
+php -r "echo 'Composer is installed!';"
