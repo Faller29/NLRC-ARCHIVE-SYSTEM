@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:nlrc_archive/data/themeData.dart';
 import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/modals/sack_content.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
@@ -57,7 +58,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Expanded(
-                      flex: 2,
                       child: Padding(
                         padding: const EdgeInsets.all(10.0),
                         child: Card(
@@ -147,6 +147,181 @@ class _SettingsPageState extends State<SettingsPage> {
                                             ],
                                           ),
                                         ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Requested Documents',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 20),
+                                Expanded(
+                                  child:
+                                      FutureBuilder<List<Map<String, dynamic>>>(
+                                    future: fetchRetrievedDocuments(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return Center(
+                                            child: CircularProgressIndicator());
+                                      } else if (!snapshot.hasData ||
+                                          snapshot.data!.isEmpty) {
+                                        return Center(
+                                            child: Text(
+                                                'No requested documents found'));
+                                      }
+                                      return ListView.builder(
+                                        itemCount: snapshot.data!.length,
+                                        itemBuilder: (context, index) {
+                                          var retrieved = snapshot.data![index];
+                                          return Card(
+                                            color: Colors.grey[300],
+                                            margin: EdgeInsets.symmetric(
+                                                vertical: 8.0,
+                                                horizontal: 16.0),
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 20,
+                                                  right: 20,
+                                                  bottom: 10,
+                                                  top: 10),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Icon(Icons.book,
+                                                          size: 16),
+                                                      SizedBox(width: 6),
+                                                      Text(
+                                                        "Case #: ${retrieved['doc_number']}",
+                                                        style: TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  SizedBox(height: 10),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      SizedBox(
+                                                        width:
+                                                            MediaQuery.sizeOf(
+                                                                        context)
+                                                                    .width /
+                                                                2,
+                                                        child: Tooltip(
+                                                          message: retrieved[
+                                                              'doc_complainant'],
+                                                          child: Text(
+                                                            '${retrieved['doc_complainant']}',
+                                                            style: TextStyle(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        'vs',
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                          height: 0.7,
+                                                        ),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
+                                                      Tooltip(
+                                                        message: retrieved[
+                                                            'doc_respondent'],
+                                                        child: Text(
+                                                          '${retrieved['doc_respondent']}',
+                                                          style: TextStyle(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Divider(),
+                                                  Align(
+                                                    alignment:
+                                                        Alignment.centerRight,
+                                                    child: ElevatedButton.icon(
+                                                      onPressed: () async {
+                                                        await updateDocumentStatus(
+                                                            retrieved['doc_id'],
+                                                            "Stored");
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          snackBarSuccess(
+                                                              'Archieved Successfully',
+                                                              context),
+                                                        );
+                                                        setState(() {});
+                                                      },
+                                                      icon: Icon(Icons.archive,
+                                                          color: Colors.white),
+                                                      label: Text("Archive"),
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            Colors.blueGrey,
+                                                        foregroundColor:
+                                                            Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   ),

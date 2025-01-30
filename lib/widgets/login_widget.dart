@@ -36,20 +36,25 @@ class _logInWidgetPage extends State<LoginWidget> {
     var data = jsonDecode(response.body);
 
     if (data['status'] == "Success") {
-      var arbiId = data['arbi_id']; // Get the arbi_id from the response
+      var arbiId = data['arbi_id'];
       var arbiterName = data['arbi_name'];
       var arbiterRoom = data['room'];
+      var accountId = data['acc_id'];
 
       ScaffoldMessenger.of(context).showSnackBar(
         snackBarSuccess('Log In Successfully', context),
       );
-
+      print(arbiterName);
+      //print(arbiterName)
       // Pass arbi_id to ScreenWrapper
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => ScreenWrapper(
-              adminType: arbiId, name: arbiterName, room: arbiterRoom),
+              adminType: arbiId,
+              name: arbiterName,
+              room: arbiterRoom,
+              accountId: accountId),
         ),
       );
     } else {

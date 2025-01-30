@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:nlrc_archive/main.dart';
+import 'package:nlrc_archive/modals/show_request_modal.dart';
 import 'package:nlrc_archive/screens/archive_page.dart';
 import 'package:nlrc_archive/screens/home_page.dart';
 import 'package:nlrc_archive/screens/login_page.dart';
@@ -12,12 +14,17 @@ import 'package:nlrc_archive/sql_functions/sql_homepage.dart';
 List<Map<String, String>> arbiter = [];
 String? adminType;
 bool isFetching = false;
+var user;
+var accountId;
 
 class ScreenWrapper extends StatefulWidget {
   final adminType;
   final name;
   final room;
-  ScreenWrapper({Key? key, this.adminType, this.name, this.room})
+  final accountId;
+
+  ScreenWrapper(
+      {Key? key, this.adminType, this.name, this.room, this.accountId})
       : super(key: key);
 
   @override
@@ -32,34 +39,89 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
     {'icon': Icons.settings, 'label': 'Settings'},
   ];
   final List<Widget> _pages = [HomePage(), SettingsPage()];
-
   Future<void> fetchArbiters() async {
     List<Map<String, String>> arbiters = await getArbiters();
     setState(() {
       arbiter = arbiters;
       adminType = widget.adminType;
+      accountId = widget.accountId;
     });
   }
 
+  late Timer _timer;
+
   @override
   void initState() {
+    user = widget.name;
+    accountId = widget.accountId;
+
     fetchArbiters();
     fetch();
+    _startPolling();
+
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   fetch() async {
     setState(() {
       isFetching = true;
     });
-    print('fetching');
-    documents = await fetchDocuments(query);
+    requestedDocument = await fetchRequestedDocuments();
+    documents = await fetchDocuments(query, user);
     sackCreatedList = await fetchCreatedSack();
     sackPendingList = await fetchPendingSack();
+
     setState(() {
       isFetching = false;
     });
-    print('fetched');
+  }
+
+  _startPolling() async {
+    _timer = Timer.periodic(Duration(seconds: 5), (timer) async {
+      if (!isFetching) {
+        fetchRequestedDocuments().then((data) {
+          if (!listsAreEqual(requestedDocument, data)) {
+            setState(() {
+              requestedDocument = data;
+            });
+          }
+        });
+      }
+    });
+  }
+
+  bool listsAreEqual(var list1, var list2) {
+    if (list1.length != list2.length) {
+      return false;
+    }
+
+    for (int i = 0; i < list1.length; i++) {
+      if (!mapEquals(list1[i], list2[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool mapEquals(var map1, var map2) {
+    if (map1.keys.length != map2.keys.length) {
+      return false;
+    }
+
+    for (var key in map1.keys) {
+      if (map1[key] != map2[key]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   @override
@@ -193,12 +255,49 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                                 Text(
                                   'Requests',
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
                                 ),
-                                Divider(
-                                  color: Colors.black,
+                                Divider(color: Colors.black),
+                                Expanded(
+                                  child:
+                                      FutureBuilder<List<Map<String, dynamic>>>(
+                                    future: fetchRequestedDocuments(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return Center(
+                                            child: CircularProgressIndicator());
+                                      } else if (snapshot.hasError) {
+                                        return Center(
+                                            child: Text(
+                                                'Error loading documents'));
+                                      } else if (!snapshot.hasData ||
+                                          snapshot.data!.isEmpty) {
+                                        return Center(
+                                            child: Text('No requests found'));
+                                      }
+
+                                      return ListView.builder(
+                                        itemCount: snapshot.data!.length,
+                                        itemBuilder: (context, index) {
+                                          var doc = snapshot.data![index];
+
+                                          return Card(
+                                            color: Colors.white,
+                                            child: ListTile(
+                                              title: Text(doc['doc_number'],
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                              onTap: () => showDocumentDialog(
+                                                  doc, context),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ],
                             ),

@@ -8,6 +8,7 @@ List<Map<String, dynamic>> documents = [];
 List<dynamic> sackCreatedList = [];
 List<dynamic> sackPendingList = [];
 String query = '';
+List<dynamic> requestedDocument = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

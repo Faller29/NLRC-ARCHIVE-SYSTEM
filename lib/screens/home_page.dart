@@ -6,6 +6,7 @@ import 'package:nlrc_archive/data/themeData.dart';
 import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/modals/sack_content.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
+import 'package:nlrc_archive/sql_functions/sql_backend.dart';
 import 'package:nlrc_archive/sql_functions/sql_homepage.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
 import 'package:http/http.dart' as http;
@@ -27,19 +28,23 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _sackId = TextEditingController();
   TextEditingController rejectReason = TextEditingController();
 
+  int currentPage = 0;
+  final int pageSize = 5;
   List<dynamic> _arbiterChoices = [];
-  late Timer _timer;
   //List<Map<String, dynamic>> documents = [];
+  late Timer _timer;
+
   @override
   void initState() {
-    fetchArbiters();
     _startPolling();
+    fetchArbiters();
     super.initState();
   }
 
   @override
   void dispose() {
     _timer.cancel();
+    query = '';
     super.dispose();
   }
 
@@ -84,7 +89,9 @@ class _HomePageState extends State<HomePage> {
         'POST',
         Uri.parse('http://localhost/nlrc_archive_api/upload_excel.php'),
       );
+
       request.fields['arbiter_number'] = _selectedArbiter!;
+      request.fields['account_id'] = accountId;
       request.files.add(await http.MultipartFile.fromPath(
         'file',
         _selectedFilePath!,
@@ -144,6 +151,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> addSack() async {
+    print(accountId.runtimeType);
+
     if (_sackId.text.isEmpty ||
         _selectedArbiter == null ||
         _selectedArbiter!.isEmpty) {
@@ -159,6 +168,7 @@ class _HomePageState extends State<HomePage> {
       "sack_name": _sackId.text,
       "arbiter_number": _selectedArbiter,
       "sack_status": 'Creating',
+      "acc_id": accountId,
     });
 
     var data = jsonDecode(response.body);
@@ -217,7 +227,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> updateSackStatus(String sackId) async {
-    print(sackId);
     var url = "http://localhost/nlrc_archive_api/update_sack_status.php";
     try {
       var response = await http.post(
@@ -260,7 +269,6 @@ class _HomePageState extends State<HomePage> {
           'reject_message': rejectReason.text,
         },
       );
-      print(rejectReason.toString());
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         if (data['success']) {
@@ -287,8 +295,8 @@ class _HomePageState extends State<HomePage> {
   _startPolling() async {
     _timer = Timer.periodic(Duration(seconds: 30), (timer) async {
       if (!isFetching) {
-        fetchDocuments(query).then((data) {
-          if (!_listsAreEqual(documents, data)) {
+        fetchDocuments(query, user).then((data) {
+          if (!listsAreEqual(documents, data)) {
             setState(() {
               documents = data;
             });
@@ -296,7 +304,7 @@ class _HomePageState extends State<HomePage> {
         });
 
         fetchCreatedSack().then((data) {
-          if (!_listsAreEqual(sackCreatedList, data)) {
+          if (!listsAreEqual(sackCreatedList, data)) {
             setState(() {
               sackCreatedList = data;
             });
@@ -304,7 +312,7 @@ class _HomePageState extends State<HomePage> {
         });
 
         fetchPendingSack().then((data) {
-          if (!_listsAreEqual(sackPendingList, data)) {
+          if (!listsAreEqual(sackPendingList, data)) {
             setState(() {
               sackPendingList = data;
             });
@@ -314,13 +322,13 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  bool _listsAreEqual(var list1, var list2) {
+  bool listsAreEqual(var list1, var list2) {
     if (list1.length != list2.length) {
       return false;
     }
 
     for (int i = 0; i < list1.length; i++) {
-      if (!_mapEquals(list1[i], list2[i])) {
+      if (!mapEquals(list1[i], list2[i])) {
         return false;
       }
     }
@@ -328,7 +336,7 @@ class _HomePageState extends State<HomePage> {
     return true;
   }
 
-  bool _mapEquals(var map1, var map2) {
+  bool mapEquals(var map1, var map2) {
     if (map1.keys.length != map2.keys.length) {
       return false;
     }
@@ -412,7 +420,8 @@ class _HomePageState extends State<HomePage> {
                 Flexible(
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.only(
+                          top: 20.0, left: 20.0, right: 20.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
                         children: [
@@ -451,7 +460,7 @@ class _HomePageState extends State<HomePage> {
                             child: Container(
                               width: 600,
                               child: FutureBuilder<List<Map<String, dynamic>>>(
-                                future: fetchDocuments(query),
+                                future: fetchDocuments(query, user),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
@@ -467,350 +476,483 @@ class _HomePageState extends State<HomePage> {
                                         child: Text('No documents found.'));
                                   }
 
-                                  //final documents = snapshot.data!;
                                   documents = snapshot.data!;
-
                                   documents.sort((a, b) {
                                     return (a['doc_complainant'] ?? '')
                                         .compareTo(b['doc_complainant'] ?? '');
                                   });
-                                  return ListView.builder(
-                                    itemCount: documents.length,
-                                    itemBuilder: (context, index) {
-                                      final doc = documents[index];
 
-                                      final sackName =
-                                          doc['sack_name'] ?? 'No Sack Name';
-                                      final doc_complainant =
-                                          doc['doc_complainant'] ??
-                                              'No complainant';
-                                      final doc_respondent =
-                                          doc['doc_respondent'] ??
-                                              'No respondent';
-                                      final docStatus =
-                                          doc['status'] ?? 'Unknown';
-                                      final verdict =
-                                          "${doc['verdict']!.isEmpty ? 'No Verdict' : doc['verdict']}";
-                                      final arbiName =
-                                          doc['arbi_name'] ?? 'No arbiter';
-                                      final docId =
-                                          doc['doc_id'] ?? 'No document Id';
+                                  // Pagination logic
+                                  int totalPages =
+                                      (documents.length / pageSize).ceil();
+                                  int startIndex = currentPage * pageSize;
+                                  int endIndex = startIndex + pageSize;
+                                  List<Map<String, dynamic>> visibleDocuments =
+                                      documents.sublist(
+                                          startIndex,
+                                          endIndex > documents.length
+                                              ? documents.length
+                                              : endIndex);
 
-                                      String docName =
-                                          doc['doc_name'] ?? 'No document name';
-                                      String docVolume =
-                                          "${doc['volume']!.isEmpty ? 'No volume' : doc['volume']}";
-                                      String version =
-                                          "${doc['version']}" ?? 'No';
+                                  return Column(
+                                    children: [
+                                      Expanded(
+                                        child: ListView.builder(
+                                          itemCount: visibleDocuments.length,
+                                          itemBuilder: (context, index) {
+                                            final doc = visibleDocuments[index];
 
-                                      return Card(
-                                        color: Colors.grey[300],
-                                        margin: const EdgeInsets.symmetric(
-                                            vertical: 8.0, horizontal: 16.0),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              // Title Row
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        "$doc_complainant",
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        "vs",
-                                                        style: TextStyle(
-                                                            fontSize: 18,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            height: 0.5),
-                                                      ),
-                                                      Text(
-                                                        "$doc_respondent",
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      horizontal: 12.0,
-                                                      vertical: 6.0,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      color: docStatus ==
-                                                              'Stored'
-                                                          ? Colors.green[100]
-                                                          : Colors.red[100],
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12.0),
-                                                    ),
-                                                    child: Text(
-                                                      docStatus,
+                                            final sackName = doc['sack_name'] ??
+                                                'No Sack Name';
+                                            final doc_complainant =
+                                                doc['doc_complainant'] ??
+                                                    'No complainant';
+                                            final doc_respondent =
+                                                doc['doc_respondent'] ??
+                                                    'No respondent';
+                                            final docStatus =
+                                                doc['status'] ?? 'Unknown';
+                                            final verdict =
+                                                "${doc['verdict']!.isEmpty ? 'No Verdict' : doc['verdict']}";
+                                            final arbiName = doc['arbi_name'] ??
+                                                'No arbiter';
+                                            final docId = doc['doc_id'] ??
+                                                'No document Id';
+
+                                            String docName = doc['doc_name'] ??
+                                                'No document name';
+                                            String docVolume =
+                                                "${doc['volume']!.isEmpty ? 'No volume' : doc['volume']}";
+                                            String version =
+                                                "${doc['version']}" ?? 'No';
+
+                                            return Card(
+                                              color: Colors.grey[300],
+                                              margin:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 8.0,
+                                                      horizontal: 16.0),
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 16.0,
+                                                    top: 5.0,
+                                                    left: 16.0,
+                                                    right: 16.0),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      "Case #: ${docName.toUpperCase()}",
                                                       style: TextStyle(
-                                                        color: docStatus ==
-                                                                'Stored'
-                                                            ? Colors.green[800]
-                                                            : Colors.red[800],
+                                                        fontSize: 12,
                                                         fontWeight:
                                                             FontWeight.bold,
+                                                        color: Colors.grey[800],
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 8.0),
-
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    "Case #: ${docName.toUpperCase()}",
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.grey[800],
+                                                    SizedBox(
+                                                      height: 10,
                                                     ),
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      Text(
-                                                        'Volume: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[800],
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        '${docVolume}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-
-                                              const SizedBox(height: 8.0),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      Icon(Icons.storage,
-                                                          size: 16,
-                                                          color:
-                                                              Colors.grey[600]),
-                                                      const SizedBox(
-                                                          width: 6.0),
-                                                      Text(
-                                                        'Arbiter: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[800],
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        arbiName,
-                                                        style: TextStyle(
-                                                            color:
-                                                                Colors.black),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      /* Icon(Icons.storage,
-                                                          size: 16,
-                                                          color:
-                                                              Colors.grey[600]), */
-                                                      const SizedBox(
-                                                          width: 6.0),
-                                                      Text(
-                                                        'Storage: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[800],
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        sackName,
-                                                        style: TextStyle(
-                                                            color:
-                                                                Colors.black),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 6.0),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      Icon(Icons.gavel,
-                                                          size: 16,
-                                                          color:
-                                                              Colors.grey[600]),
-                                                      const SizedBox(
-                                                          width: 6.0),
-                                                      Text(
-                                                        'Verdict: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[800],
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        verdict,
-                                                        style: TextStyle(
-                                                            color:
-                                                                Colors.black),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      /* Text(
-                                                        'Version: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[800],
-                                                        ),
-                                                      ), */
-                                                      Text(
-                                                        "${version.capitalize()} version",
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[800],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                              Divider(),
-                                              Row(
-                                                children: [
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder: (context) {
-                                                          return AlertDialog(
-                                                            title: Text(
-                                                              '$docName',
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Tooltip(
+                                                              message:
+                                                                  doc_complainant,
+                                                              child: SizedBox(
+                                                                width: 400,
+                                                                child: Text(
+                                                                  doc_complainant,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        18,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .center,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              "vs.",
                                                               style: TextStyle(
-                                                                  fontSize: 18),
-                                                            ),
-                                                            content: Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                Text(
-                                                                    'Request archive for retrieval'),
-                                                              ],
-                                                            ),
-                                                            actions: [
-                                                              ElevatedButton(
-                                                                onPressed: () =>
-                                                                    Navigator.pop(
-                                                                        context),
-                                                                child: Text(
-                                                                    'Cancel'),
+                                                                fontSize: 18,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                height: 0.8,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
                                                               ),
-                                                              ElevatedButton(
-                                                                onPressed:
-                                                                    () async {
-                                                                  bool success =
-                                                                      await requestRetrieval(
-                                                                          docId);
-
-                                                                  if (success) {
-                                                                    ScaffoldMessenger.of(
-                                                                            context)
-                                                                        .showSnackBar(
-                                                                      SnackBar(
-                                                                        content:
-                                                                            Text('Retrieval request sent!'),
-                                                                      ),
-                                                                    );
-                                                                  } else {
-                                                                    ScaffoldMessenger.of(
-                                                                            context)
-                                                                        .showSnackBar(
-                                                                      SnackBar(
-                                                                        content:
-                                                                            Text('Failed to request retrieval'),
-                                                                      ),
-                                                                    );
-                                                                  }
-
-                                                                  Navigator.pop(
-                                                                      context);
-                                                                },
+                                                            ),
+                                                            Tooltip(
+                                                              message:
+                                                                  doc_respondent,
+                                                              child: SizedBox(
+                                                                width: 400,
                                                                 child: Text(
-                                                                    'Confirm'),
+                                                                  doc_respondent,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        18,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                  ),
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .center,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                ),
                                                               ),
-                                                            ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                            horizontal: 12.0,
+                                                            vertical: 6.0,
+                                                          ),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: docStatus ==
+                                                                    'Stored'
+                                                                ? Colors
+                                                                    .green[100]
+                                                                : docStatus ==
+                                                                        'Requested'
+                                                                    ? Colors.blue[
+                                                                        100]
+                                                                    : Colors.red[
+                                                                        100],
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                          child: Text(
+                                                            docStatus,
+                                                            style: TextStyle(
+                                                              color: docStatus ==
+                                                                      'Stored'
+                                                                  ? Colors.green[
+                                                                      800]
+                                                                  : docStatus ==
+                                                                          'Requested'
+                                                                      ? Colors.blue[
+                                                                          800]
+                                                                      : Colors.red[
+                                                                          800],
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(
+                                                        height: 18.0),
+                                                    Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.book,
+                                                          color:
+                                                              Colors.grey[600],
+                                                          size: 16,
+                                                        ),
+                                                        SizedBox(
+                                                          width: 6,
+                                                        ),
+                                                        Text(
+                                                          'Volume: ',
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: Colors
+                                                                .grey[800],
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          '${docVolume}',
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 8.0),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Icon(Icons.storage,
+                                                                size: 16,
+                                                                color: Colors
+                                                                    .grey[600]),
+                                                            const SizedBox(
+                                                                width: 6.0),
+                                                            Text(
+                                                              'Arbiter: ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color: Colors
+                                                                    .grey[800],
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              arbiName,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            const SizedBox(
+                                                                width: 6.0),
+                                                            Text(
+                                                              'Storage: ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color: Colors
+                                                                    .grey[800],
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                              sackName,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 6.0),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Icon(Icons.gavel,
+                                                                size: 16,
+                                                                color: Colors
+                                                                    .grey[600]),
+                                                            const SizedBox(
+                                                                width: 6.0),
+                                                            Text(
+                                                              'Verdict: ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color: Colors
+                                                                    .grey[800],
+                                                              ),
+                                                            ),
+                                                            Text(verdict),
+                                                          ],
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Text(
+                                                              "${version.capitalize()} version",
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color: Colors
+                                                                    .grey[800],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Divider(),
+                                                    Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: ElevatedButton(
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .green,
+                                                                foregroundColor:
+                                                                    Colors
+                                                                        .white),
+                                                        onPressed: () {
+                                                          showDialog(
+                                                            context: context,
+                                                            builder: (context) {
+                                                              return AlertDialog(
+                                                                title: Text(
+                                                                  '$docName',
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          18,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
+                                                                ),
+                                                                content: Column(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    Text(
+                                                                      'Request archive for retrieval',
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                actions: [
+                                                                  ElevatedButton(
+                                                                    style: ElevatedButton.styleFrom(
+                                                                        backgroundColor:
+                                                                            Colors
+                                                                                .red,
+                                                                        foregroundColor:
+                                                                            Colors.white),
+                                                                    onPressed: () =>
+                                                                        Navigator.pop(
+                                                                            context),
+                                                                    child: Text(
+                                                                        'Cancel'),
+                                                                  ),
+                                                                  ElevatedButton(
+                                                                    style: ElevatedButton.styleFrom(
+                                                                        backgroundColor:
+                                                                            Colors
+                                                                                .green,
+                                                                        foregroundColor:
+                                                                            Colors.white),
+                                                                    onPressed:
+                                                                        () async {
+                                                                      if (docStatus ==
+                                                                          'Stored') {
+                                                                        bool success = await requestRetrieval(
+                                                                            docId,
+                                                                            accountId);
+
+                                                                        if (success) {
+                                                                          setState(
+                                                                              () {});
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .showSnackBar(
+                                                                            snackBarSuccess(
+                                                                              'Retrieval request sent!',
+                                                                              context,
+                                                                            ),
+                                                                          );
+                                                                        } else {
+                                                                          ScaffoldMessenger.of(context)
+                                                                              .showSnackBar(
+                                                                            snackBarFailed('Failed to request retrieval',
+                                                                                context),
+                                                                          );
+                                                                        }
+                                                                      } else {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          snackBarFailed(
+                                                                            'Case not in Archive',
+                                                                            context,
+                                                                          ),
+                                                                        );
+                                                                      }
+
+                                                                      Navigator.pop(
+                                                                          context);
+                                                                    },
+                                                                    child: Text(
+                                                                        'Confirm'),
+                                                                  ),
+                                                                ],
+                                                                actionsAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                              );
+                                                            },
                                                           );
                                                         },
-                                                      );
-                                                    },
-                                                    child: Text('Request'),
-                                                  ),
-                                                ],
-                                              )
-                                            ],
-                                          ),
+                                                        child: Text('Request'),
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
                                         ),
-                                      );
-                                    },
+                                      ),
+
+                                      // Pagination controls
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          IconButton(
+                                            onPressed: currentPage > 0
+                                                ? () {
+                                                    setState(() {
+                                                      currentPage--;
+                                                    });
+                                                  }
+                                                : null,
+                                            icon: Icon(Icons.arrow_left),
+                                          ),
+                                          SizedBox(width: 16),
+                                          Text(
+                                              "Page ${currentPage + 1} of $totalPages"),
+                                          SizedBox(width: 16),
+                                          IconButton(
+                                              onPressed:
+                                                  currentPage < totalPages - 1
+                                                      ? () {
+                                                          setState(() {
+                                                            currentPage++;
+                                                          });
+                                                        }
+                                                      : null,
+                                              icon: Icon(Icons.arrow_right))
+                                        ],
+                                      ),
+                                    ],
                                   );
                                 },
                               ),
@@ -901,10 +1043,17 @@ class _HomePageState extends State<HomePage> {
                                                       return Column(
                                                         children: [
                                                           Container(
-                                                            color: isRejected
-                                                                ? Colors.red
-                                                                : Colors
-                                                                    .transparent,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10),
+                                                              color: isRejected
+                                                                  ? Colors.red
+                                                                  : Colors.green[
+                                                                      200],
+                                                            ),
                                                             child: ListTile(
                                                               title: Text(
                                                                 sack['sack_name'] ??
@@ -1079,171 +1228,173 @@ class _HomePageState extends State<HomePage> {
                                 ],
                               ),
                               Positioned(
-                                top: 30,
+                                top: 35,
                                 right: 0,
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blueAccent,
-                                      ),
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return StatefulBuilder(
-                                              builder: (context, setState) {
-                                                return AlertDialog(
-                                                  title: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Text(
-                                                        'Upload Excel File'),
-                                                  ),
-                                                  content: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
+                                    if (user == null)
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(
+                                              255, 51, 38, 165),
+                                        ),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return StatefulBuilder(
+                                                builder: (context, setState) {
+                                                  return AlertDialog(
+                                                    title: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      child: Text(
+                                                          'Upload Excel File'),
+                                                    ),
+                                                    content: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        ElevatedButton(
+                                                          style: ElevatedButton
+                                                              .styleFrom(
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .orangeAccent,
+                                                            foregroundColor:
+                                                                Colors.white,
+                                                          ),
+                                                          onPressed: () {
+                                                            pickExcelFile(
+                                                                setState);
+                                                          },
+                                                          child: Text(
+                                                              'Select Excel File'),
+                                                        ),
+                                                        SizedBox(height: 20),
+                                                        Row(
+                                                          children: [
+                                                            Expanded(
+                                                              child: Text(
+                                                                _selectedFileName !=
+                                                                        null
+                                                                    ? 'Selected File: $_selectedFileName'
+                                                                    : 'No file selected',
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .black54),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                            if (_selectedFileName !=
+                                                                null)
+                                                              IconButton(
+                                                                icon: Icon(
+                                                                    Icons.close,
+                                                                    color: Colors
+                                                                        .red),
+                                                                onPressed: () {
+                                                                  setState(() {
+                                                                    _selectedFileName =
+                                                                        null;
+                                                                  });
+                                                                },
+                                                              ),
+                                                          ],
+                                                        ),
+                                                        SizedBox(height: 20),
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child:
+                                                              DropdownButtonFormField<
+                                                                  String>(
+                                                            value: _selectedArbiter ==
+                                                                    null
+                                                                ? null
+                                                                : _selectedArbiter,
+                                                            decoration:
+                                                                InputDecoration(
+                                                              labelText:
+                                                                  'Arbiter',
+                                                              border:
+                                                                  OutlineInputBorder(),
+                                                            ),
+                                                            items: _arbiterChoices
+                                                                .map((choice) {
+                                                              return DropdownMenuItem<
+                                                                  String>(
+                                                                value: choice,
+                                                                child: Text(
+                                                                    choice),
+                                                              );
+                                                            }).toList(),
+                                                            onChanged: (value) {
+                                                              setState(() {
+                                                                _selectedArbiter =
+                                                                    value ?? '';
+                                                                print(
+                                                                    _selectedArbiter);
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    actions: [
                                                       ElevatedButton(
                                                         style: ElevatedButton
                                                             .styleFrom(
-                                                          backgroundColor:
-                                                              Colors
-                                                                  .orangeAccent,
-                                                          foregroundColor:
-                                                              Colors.white,
-                                                        ),
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .redAccent,
+                                                                foregroundColor:
+                                                                    Colors
+                                                                        .white),
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                                context),
+                                                        child: Text('Close'),
+                                                      ),
+                                                      ElevatedButton(
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .green,
+                                                                foregroundColor:
+                                                                    Colors
+                                                                        .white),
                                                         onPressed: () {
-                                                          pickExcelFile(
+                                                          uploadExcelFile(
                                                               setState);
                                                         },
-                                                        child: Text(
-                                                            'Select Excel File'),
-                                                      ),
-                                                      SizedBox(height: 20),
-                                                      Row(
-                                                        children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                              _selectedFileName !=
-                                                                      null
-                                                                  ? 'Selected File: $_selectedFileName'
-                                                                  : 'No file selected',
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .black54),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                          ),
-                                                          if (_selectedFileName !=
-                                                              null)
-                                                            IconButton(
-                                                              icon: Icon(
-                                                                  Icons.close,
-                                                                  color: Colors
-                                                                      .red),
-                                                              onPressed: () {
-                                                                setState(() {
-                                                                  _selectedFileName =
-                                                                      null;
-                                                                });
-                                                                print(
-                                                                    "File selection cleared");
-                                                              },
-                                                            ),
-                                                        ],
-                                                      ),
-                                                      SizedBox(height: 20),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(8.0),
-                                                        child:
-                                                            DropdownButtonFormField<
-                                                                String>(
-                                                          value: _selectedArbiter ==
-                                                                  null
-                                                              ? null
-                                                              : _selectedArbiter,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            labelText:
-                                                                'Arbiter',
-                                                            border:
-                                                                OutlineInputBorder(),
-                                                          ),
-                                                          items: _arbiterChoices
-                                                              .map((choice) {
-                                                            return DropdownMenuItem<
-                                                                String>(
-                                                              value: choice,
-                                                              child:
-                                                                  Text(choice),
-                                                            );
-                                                          }).toList(),
-                                                          onChanged: (value) {
-                                                            setState(() {
-                                                              _selectedArbiter =
-                                                                  value ?? '';
-                                                              print(
-                                                                  _selectedArbiter);
-                                                            });
-                                                          },
-                                                        ),
+                                                        child: Text('Save'),
                                                       ),
                                                     ],
-                                                  ),
-                                                  actions: [
-                                                    ElevatedButton(
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                              backgroundColor:
-                                                                  Colors
-                                                                      .redAccent,
-                                                              foregroundColor:
-                                                                  Colors.white),
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                              context),
-                                                      child: Text('Close'),
-                                                    ),
-                                                    ElevatedButton(
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                              backgroundColor:
-                                                                  Colors.green,
-                                                              foregroundColor:
-                                                                  Colors.white),
-                                                      onPressed: () {
-                                                        uploadExcelFile(
-                                                            setState);
-                                                      },
-                                                      child: Text('Save'),
-                                                    ),
-                                                  ],
-                                                  actionsAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceAround,
-                                                );
-                                              },
-                                            );
-                                          },
-                                        );
-                                      },
-                                      child: Text(
-                                        '+ Auto',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                                    actionsAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceAround,
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Text(
+                                          '+ Auto',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    SizedBox(
-                                        width: 10), // Spacer between buttons
+                                    SizedBox(width: 10),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.greenAccent,
@@ -1269,38 +1420,47 @@ class _HomePageState extends State<HomePage> {
                                                           'Enter Sack ID',
                                                     ),
                                                     SizedBox(height: 20),
-                                                    DropdownButtonFormField<
-                                                        String>(
-                                                      value: _selectedArbiter,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        labelText: 'Arbiter',
-                                                        border:
-                                                            OutlineInputBorder(),
+                                                    IgnorePointer(
+                                                      ignoring:
+                                                          _selectedArbiter !=
+                                                              null,
+                                                      child:
+                                                          DropdownButtonFormField<
+                                                              String>(
+                                                        value: _selectedArbiter,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          labelText: 'Arbiter',
+                                                          border:
+                                                              OutlineInputBorder(),
+                                                        ),
+                                                        items: _arbiterChoices
+                                                            .map((choice) {
+                                                          return DropdownMenuItem<
+                                                              String>(
+                                                            value: choice,
+                                                            child: Text(choice),
+                                                          );
+                                                        }).toList(),
+                                                        onChanged: (value) {
+                                                          if (_selectedArbiter ==
+                                                              null) {
+                                                            setState(() {
+                                                              _selectedArbiter =
+                                                                  value ?? '';
+                                                              print(
+                                                                  _selectedArbiter);
+                                                            });
+                                                          }
+                                                        },
+                                                        validator: (value) {
+                                                          if (value == null ||
+                                                              value.isEmpty) {
+                                                            return 'Please select an arbiter';
+                                                          }
+                                                          return null;
+                                                        },
                                                       ),
-                                                      items: _arbiterChoices
-                                                          .map((choice) {
-                                                        return DropdownMenuItem<
-                                                            String>(
-                                                          value: choice,
-                                                          child: Text(choice),
-                                                        );
-                                                      }).toList(),
-                                                      onChanged: (value) {
-                                                        setState(() {
-                                                          _selectedArbiter =
-                                                              value ?? '';
-                                                          print(
-                                                              _selectedArbiter);
-                                                        });
-                                                      },
-                                                      validator: (value) {
-                                                        if (value == null ||
-                                                            value.isEmpty) {
-                                                          return 'Please select an arbiter';
-                                                        }
-                                                        return null;
-                                                      },
                                                     ),
                                                   ],
                                                 ),
@@ -1357,7 +1517,7 @@ class _HomePageState extends State<HomePage> {
                       height: 300,
                       child: Card(
                         color: const Color.fromARGB(255, 25, 17, 134)
-                            .withOpacity(0.8),
+                            .withValues(alpha: 0.8),
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(

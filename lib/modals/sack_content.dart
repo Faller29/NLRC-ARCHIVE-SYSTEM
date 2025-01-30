@@ -109,8 +109,9 @@ class _SackContentState extends State<SackContent> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        '${widget.sackName}',
+        'Sack ${widget.sackName}',
         style: TextStyle(fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
       ),
       content: SizedBox(
         width: MediaQuery.of(context).size.width * 0.4,
@@ -134,6 +135,7 @@ class _SackContentState extends State<SackContent> {
                   final doc = documents[index];
 
                   return Card(
+                    color: Colors.green[100],
                     elevation: 3,
                     margin: EdgeInsets.symmetric(vertical: 8),
                     child: ListTile(

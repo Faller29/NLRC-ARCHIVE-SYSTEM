@@ -1,8 +1,9 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:nlrc_archive/screens/screen_wrapper.dart';
+
 Future<Map<String, dynamic>> sendForApproval(String sackId) async {
-  print(sackId);
   try {
     final response = await http.post(
       Uri.parse('http://localhost/nlrc_archive_api/send_sack.php'),
@@ -19,11 +20,14 @@ Future<Map<String, dynamic>> sendForApproval(String sackId) async {
   }
 }
 
-Future<List<Map<String, dynamic>>> fetchDocuments(String query) async {
+Future<List<Map<String, dynamic>>> fetchDocuments(
+    String query, String? user) async {
   var url = "http://localhost/nlrc_archive_api/retrieve_data.php";
 
   final uri = Uri.parse(url).replace(queryParameters: {
     'Query': query,
+    'User': user ??
+        '', // Pass user parameter (null will be sent as an empty string)
   });
 
   try {
@@ -31,7 +35,6 @@ Future<List<Map<String, dynamic>>> fetchDocuments(String query) async {
 
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
-      print("document: $data");
       return List<Map<String, dynamic>>.from(
         data.map((item) {
           return {
@@ -59,11 +62,15 @@ Future<List<Map<String, dynamic>>> fetchDocuments(String query) async {
 
 Future<List<dynamic>> fetchCreatedSack() async {
   var url = "http://localhost/nlrc_archive_api/retrieve_created_sack.php";
+
+  final uri = Uri.parse(url).replace(queryParameters: {
+    'acc_id': accountId,
+  });
+
   try {
-    var response = await http.get(Uri.parse(url));
+    var response = await http.get(uri);
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
-      print("CSAC: $data");
       return data;
     } else {
       throw Exception('Failed to fetch data');
@@ -79,7 +86,6 @@ Future<List<dynamic>> fetchPendingSack() async {
     var response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
-      print("PSACK: $data");
       return data;
     } else {
       throw Exception('Failed to fetch');
@@ -89,13 +95,13 @@ Future<List<dynamic>> fetchPendingSack() async {
   }
 }
 
-Future<bool> requestRetrieval(var docId) async {
+Future<bool> requestRetrieval(var docId, var accountId) async {
   try {
     String docIdStr = docId.toString();
 
     final response = await http.post(
       Uri.parse('http://localhost/nlrc_archive_api/request_document.php'),
-      body: {'doc_id': docIdStr},
+      body: {'doc_id': docIdStr, "acc_id": accountId},
     );
 
     final data = jsonDecode(response.body);

@@ -80,7 +80,10 @@ class _AddDocumentState extends State<AddDocument> {
     return AlertDialog(
       title: Text(
         'Add Document',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       content: SingleChildScrollView(
         child: Form(
@@ -100,6 +103,7 @@ class _AddDocumentState extends State<AddDocument> {
 
                     return null;
                   },
+                  onFieldSubmitted: (_) => addDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 TextFieldBoxWidget(
@@ -112,7 +116,7 @@ class _AddDocumentState extends State<AddDocument> {
 
                     return null;
                   },
-                  onFieldSubmitted: (_) => null,
+                  onFieldSubmitted: (_) => addDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 Text(
@@ -132,25 +136,19 @@ class _AddDocumentState extends State<AddDocument> {
 
                     return null;
                   },
-                  onFieldSubmitted: (_) => null,
+                  onFieldSubmitted: (_) => addDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 TextFieldBoxWidget(
                   controller: _documentVolumeController,
                   labelText: 'Volume',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter Volume';
-                    }
-
-                    return null;
-                  },
-                  onFieldSubmitted: (_) => null,
+                  onFieldSubmitted: (_) => addDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 TextFieldBoxWidget(
                   controller: _documentVerdictController,
                   labelText: 'Verdict (Optional)',
+                  onFieldSubmitted: (_) => addDocument(context),
                 )
               ],
             ),
