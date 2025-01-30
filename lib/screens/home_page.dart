@@ -1170,7 +1170,7 @@ class _HomePageState extends State<HomePage> {
                                                                           title:
                                                                               Text('Delete ${sack['sack_name']}'),
                                                                           content:
-                                                                              Text('Are you sure you want to delete ${sack['sack_name']}?'),
+                                                                              Text('Are you sure you want to delete SACK ${sack['sack_name']}?'),
                                                                           actions: [
                                                                             ElevatedButton(
                                                                               style: ElevatedButton.styleFrom(
