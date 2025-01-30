@@ -1,40 +1,33 @@
 <?php
-include("setConnection/db_connection.php");
+include('setConnection/db_connection.php');
+
+header('Content-Type: application/json');
+
 $con = dbconnection();
 
-if (!$con) {
-    die(json_encode(["error" => "Database Connection Failed"]));
+$username = $_POST['username'];
+$password = $_POST['password'];
+$arbi_id = $_POST['arbi_id'];
+
+if ($arbi_id == 'NULL' || $arbi_id === '') {
+    $arbi_id = null;
+} else {
+    $arbi_id = (int)$arbi_id;
 }
 
-if (isset($_POST['username']) && isset($_POST['password'])) {
-    $username = mysqli_real_escape_string($con, $_POST['username']);
-    $password = mysqli_real_escape_string($con, $_POST['password']);
+if (empty($username) || empty($password)) {
+    echo json_encode(['status' => 'error', 'message' => 'Username and password are required']);
+    exit;
+}
 
-    
-    $sql = "SELECT * FROM tbl_user_account WHERE username = '$username' AND password = '$password'";
-    $result = mysqli_query($con, $sql);
+$query = "INSERT INTO tbl_user_account (username, password, arbi_id) VALUES ('$username', '$password', " . ($arbi_id === null ? 'NULL' : $arbi_id) . ")";
+$result = mysqli_query($con, $query);
 
-    if (!$result) {
-        die(json_encode(["error" => "Query execution failed: " . mysqli_error($con)]));
-    }
-
-    $count = mysqli_num_rows($result);
-
-    if ($count == 1) {
-        echo json_encode("Error"); 
-    } else {
-        
-        $insert = "INSERT INTO tbl_user_account (username, password) VALUES ('$username', '$password')";
-        $query = mysqli_query($con, $insert);
-
-        if ($query) {
-            echo json_encode("Success");
-        } else {
-            echo json_encode(["error" => "Failed to register user: " . mysqli_error($con)]);
-        }
-    }
+if (!$result) {
+    echo json_encode(['status' => 'error', 'message' => 'MySQL Error: ' . mysqli_error($con)]);
+    exit;
 } else {
-    echo json_encode(["error" => "Invalid request. Username and password are required."]);
+    echo json_encode(['status' => 'success', 'message' => 'Account added successfully']);
 }
 
 mysqli_close($con);

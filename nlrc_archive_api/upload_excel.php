@@ -22,17 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sheet = $spreadsheet->getSheetByName($sheetName);
             $rows = $sheet->toArray();
 
-            // Check if the sheet has valid rows after skipping the header
-            $hasValidData = false;
-            foreach ($rows as $index => $row) {
-                if ($index === 0) continue; // Skip header row
-                if (!empty(array_filter($row))) { // Check if row has any non-empty cells
-                    $hasValidData = true;
-                    break;
-                }
-            }
-
-            if ($hasValidData) {
+            if (!empty($rows)) {
                 // Insert into tbl_sack with acc_id as accountId
                 $stmt = $con->prepare("INSERT INTO tbl_sack (arbiter_number, sack_name, status, acc_id) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("sssi", $arbiterNumber, $sheetName, $sack_status, $accountId); 
@@ -47,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Start from row 1, skip the header row if it exists
                 foreach ($rows as $index => $row) {
-                    if ($index === 0) continue; // Skip header row
+                    if ($index === 0) continue; // Skip header row if applicable
                     $docNumber = $row[0] ?? '';
                     $docComplainant = $row[1] ?? '';
                     $docRespondent = $row[2] ?? '';

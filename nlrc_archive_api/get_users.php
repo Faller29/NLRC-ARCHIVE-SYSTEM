@@ -1,25 +1,31 @@
 <?php
-include("setConnection/db_connection.php");
+include('setConnection/db_connection.php'); 
 
-$conn = dbconnection();
+header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    $sql = "SELECT u.acc_id, u.username, u.password, a.arbi_id, a.arbi_name 
-            FROM tbl_user_account u 
-            JOIN tbl_arbi_user a ON u.arbi_id = a.arbi_id";
-    
-    $result = $conn->query($sql);
+$con = dbconnection();
 
-    $arbiters = [];
-    if ($result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $arbiters[] = $row;
-        }
-        echo json_encode(["status" => "success", "arbiters" => $arbiters]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "No arbiters found"]);
-    }
+$query = "
+    SELECT ua.acc_id, ua.username, ua.password, ua.arbi_id, 
+           COALESCE(au.arbi_name, 'Admin Account') AS arbi_name
+    FROM tbl_user_account ua
+    LEFT JOIN tbl_arbi_user au ON ua.arbi_id = au.arbi_id
+";
+
+$result = mysqli_query($con, $query);
+
+if (!$result) {
+    echo json_encode(['status' => 'error', 'message' => 'Failed to execute query: ' . mysqli_error($con)]);
+    exit;
 }
 
-$conn->close();
+$accounts = [];
+
+while ($row = mysqli_fetch_assoc($result)) {
+    $accounts[] = $row;
+}
+
+echo json_encode(['status' => 'success', 'accounts' => $accounts]);
+
+mysqli_close($con);
 ?>

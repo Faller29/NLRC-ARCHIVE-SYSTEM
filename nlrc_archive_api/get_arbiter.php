@@ -1,27 +1,25 @@
 <?php
-include("setConnection/db_connection.php");
+include('setConnection/db_connection.php'); 
 
-$conn = dbconnection();
+header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    
-    $sql = "SELECT a.arbi_id, a.arbi_name, a.room, u.username, u.password 
-            FROM tbl_arbi_user a
-            JOIN tbl_user_account u ON a.arbi_id = u.arbi_id";  
-    $result = $conn->query($sql);
+$con = dbconnection();
 
-    $arbiters = [];
-    if ($result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $arbiters[] = $row;
-        }
-        echo json_encode(["status" => "success", "arbiters" => $arbiters]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "No arbiters found"]);
-    }
-} else {
-    echo json_encode(["status" => "error", "message" => "Invalid request method"]);
+$query = "SELECT arbi_id, arbi_name, room FROM tbl_arbi_user";
+$result = mysqli_query($con, $query);
+
+if (!$result) {
+    echo json_encode(['status' => 'error', 'message' => 'Failed to execute query: ' . mysqli_error($con)]);
+    exit;
 }
 
-$conn->close();
+$arbiters = [];
+
+while ($row = mysqli_fetch_assoc($result)) {
+    $arbiters[] = $row;
+}
+
+echo json_encode(['status' => 'success', 'arbiters' => $arbiters]);
+
+mysqli_close($con);
 ?>

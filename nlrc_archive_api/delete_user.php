@@ -1,23 +1,23 @@
 <?php
-include("setConnection/db_connection.php");
+include('setConnection/db_connection.php');
 
-$conn = dbconnection();
+header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['user_id'])) {
-        $user_id = $_POST['user_id'];
+$con = dbconnection(); 
 
-        
-        $sql = "DELETE FROM tbl_user_account WHERE acc_id = $user_id";
-        if ($conn->query($sql) === TRUE) {
-            echo json_encode(["status" => "success", "message" => "User account deleted successfully"]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "Failed to delete user account"]);
-        }
+$accountId = isset($_POST['acc_id']) ? (int) $_POST['acc_id'] : 0;
+
+if ($accountId > 0) {
+    $query = "DELETE FROM tbl_user_account WHERE acc_id = '$accountId'";
+
+    if (mysqli_query($con, $query)) {
+        echo json_encode(['status' => 'success']);
     } else {
-        echo json_encode(["status" => "error", "message" => "Missing user ID"]);
+        echo json_encode(['status' => 'error', 'message' => mysqli_error($con)]);
     }
+} else {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid account ID']);
 }
 
-$conn->close();
+mysqli_close($con);
 ?>
