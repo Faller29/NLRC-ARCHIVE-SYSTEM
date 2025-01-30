@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,11 @@ import 'package:nlrc_archive/modals/sack_content.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
 import 'package:nlrc_archive/sql_functions/sql_backend.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
+import 'package:http/http.dart' as http;
+
+late List<Map<String, dynamic>> arbiters;
+late List<Map<String, dynamic>> fetchedAccounts;
+late List<Map<String, dynamic>> accounts;
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -17,18 +23,120 @@ class _SettingsPageState extends State<SettingsPage> {
   final today = DateFormat('EEEE, MMMM, dd, yyyy').format(DateTime.now());
   String nlrc = "National Labor Relations Commission";
 
-  Future<void> fetchArbiters() async {
-    List<Map<String, String>> arbiters = await getArbiters();
-    setState(() {
-      arbiter = arbiters;
-    });
+  @override
+  void initState() {
+    super.initState();
   }
 
-  void _addNewArbiter(
-      String name, String room, String username, String password) {
-    addArbiter(name, room, username, password).then((_) {
-      fetchArbiters();
-    });
+  Future<void> deleteArbiter(String arbiId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost/nlrc_archive_api/delete_arbiter.php'),
+        body: {'arbi_id': arbiId},
+      );
+
+      final data = jsonDecode(response.body);
+      if (data['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+            snackBarSuccess('Arbiter added successfully!', context));
+        fetchArbitersList();
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(snackBarFailed('${data['message']}', context));
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(snackBarFailed('$error', context));
+    }
+  }
+
+  Future<void> deleteAccount(String accountId) async {
+    final url = 'http://localhost/nlrc_archive_api/delete_user.php';
+    try {
+      final response = await http.post(Uri.parse(url), body: {
+        'acc_id': accountId,
+      });
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+
+        if (responseData['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+              snackBarSuccess('Account deleted successfully!', context));
+        } else {
+          throw Exception('Failed to delete account');
+        }
+      } else {
+        throw Exception('Failed to delete account: ${response.statusCode}');
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(snackBarFailed('Failed to delete account', context));
+    }
+  }
+
+  Future<void> editAccount(String accountId, String username, String password,
+      String? arbiId) async {
+    final url = 'http://localhost/nlrc_archive_api/edit_account.php';
+    try {
+      final response = await http.post(Uri.parse(url), body: {
+        'acc_id': accountId,
+        'username': username,
+        'password': password,
+        'arbi_id': arbiId ?? 'null',
+      });
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+
+        if (responseData['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+              snackBarSuccess('Account updated successfully!', context));
+        } else {
+          throw Exception('Failed to update account');
+        }
+      } else {
+        throw Exception('Failed to update account: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Failed to update account: $error');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(snackBarFailed('Failed to update account', context));
+    }
+  }
+
+  Future<void> addAccount(
+      String username, String password, String? arbiterId) async {
+    final url = 'http://localhost/nlrc_archive_api/add_account.php';
+
+    String arbiIdToSend = arbiterId == null ? 'NULL' : arbiterId;
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: {
+          'username': username,
+          'password': password,
+          'arbi_id': arbiIdToSend,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+              snackBarSuccess('Account added successfully', context));
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(snackBarFailed('Failed to add account', context));
+        }
+      } else {
+        throw Exception('Failed to make request: ${response.statusCode}');
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(snackBarFailed('Something went wrong', context));
+    }
   }
 
   @override
@@ -60,100 +168,282 @@ class _SettingsPageState extends State<SettingsPage> {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(10.0),
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Arbiters',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        _showAddUserDialog(context);
-                                      },
-                                      icon: Icon(Icons.add),
-                                      label: Text('Add'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.greenAccent,
-                                        foregroundColor: Colors.black,
-                                        iconColor: Colors.black,
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 15, vertical: 10),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20),
-                                Expanded(
-                                  child: ListView.builder(
-                                    itemCount: arbiter.length,
-                                    itemBuilder: (context, index) {
-                                      return Card(
-                                        margin:
-                                            EdgeInsets.symmetric(vertical: 5),
-                                        child: ListTile(
-                                          leading: CircleAvatar(
-                                            backgroundColor:
-                                                Colors.blueGrey[700],
-                                            child: Text(
-                                              arbiter[index]['name']![0],
-                                              style: TextStyle(
-                                                  color: Colors.white),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Arbiters',
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          SizedBox(height: 10),
+                                          IconButton(
+                                            onPressed: () {
+                                              _showAddArbiterDialog(context);
+                                            },
+                                            icon: Icon(Icons.add),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.greenAccent,
+                                              foregroundColor: Colors.white,
                                             ),
                                           ),
-                                          title: Text(arbiter[index]['name']!),
-                                          subtitle: Text(
-                                              'Room: ${arbiter[index]['room']}'),
-                                          trailing: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(Icons.edit),
-                                                onPressed: () {
-                                                  _showAddUserDialog(context,
-                                                      isEdit: true,
-                                                      user: arbiter[index]);
+                                        ],
+                                      ),
+                                      SizedBox(height: 10),
+                                      Expanded(
+                                        child: FutureBuilder<
+                                            List<Map<String, dynamic>>>(
+                                          future: getArbiters(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return Center(
+                                                  child:
+                                                      CircularProgressIndicator());
+                                            } else if (snapshot.hasError) {
+                                              return Center(
+                                                  child: Text(
+                                                      'Error: ${snapshot.error}'));
+                                            } else if (!snapshot.hasData ||
+                                                snapshot.data!.isEmpty) {
+                                              return Center(
+                                                  child: Text(
+                                                      'No arbiters found'));
+                                            } else {
+                                              final arbiters = snapshot.data!;
+
+                                              return ListView.builder(
+                                                itemCount: arbiters.length,
+                                                itemBuilder: (context, index) {
+                                                  return Card(
+                                                    color: const Color.fromARGB(
+                                                        255, 204, 224, 224),
+                                                    margin:
+                                                        EdgeInsets.symmetric(
+                                                            vertical: 5),
+                                                    child: ListTile(
+                                                      leading: CircleAvatar(
+                                                        backgroundColor: Colors
+                                                            .blueGrey[700],
+                                                        child: Text(
+                                                          arbiters[index]
+                                                              ['name']![0],
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                      ),
+                                                      title: Text(
+                                                          arbiters[index]
+                                                              ['name']!),
+                                                      subtitle: Text(
+                                                          'Room: ${arbiters[index]['room']}'),
+                                                      trailing: IconButton(
+                                                        icon: Icon(Icons.delete,
+                                                            color: Colors.red),
+                                                        onPressed: () =>
+                                                            showDialog(
+                                                          context: context,
+                                                          builder: (BuildContext
+                                                              context) {
+                                                            return AlertDialog(
+                                                              title: Text(
+                                                                  'Confirm Deletion'),
+                                                              content: Text(
+                                                                'Are you sure you want to delete this item? This action cannot be undone.',
+                                                              ),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () =>
+                                                                      Navigator.of(
+                                                                              context)
+                                                                          .pop(),
+                                                                  child: Text(
+                                                                      'Cancel'),
+                                                                ),
+                                                                ElevatedButton(
+                                                                  style: ElevatedButton
+                                                                      .styleFrom(
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .red,
+                                                                    foregroundColor:
+                                                                        Colors
+                                                                            .white,
+                                                                  ),
+                                                                  onPressed:
+                                                                      () async {
+                                                                    await deleteArbiter(
+                                                                        arbiters[index]
+                                                                            [
+                                                                            'arbi_id']);
+
+                                                                    setState(
+                                                                        () {});
+
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+                                                                  },
+                                                                  child: Text(
+                                                                      'Delete'),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
                                                 },
-                                              ),
-                                              IconButton(
-                                                icon: Icon(Icons.delete,
-                                                    color: Colors.red),
-                                                onPressed: () {
-                                                  String account_id =
-                                                      arbiter[index]
-                                                          ['arbi_id']!;
-                                                  _showDeleteConfirmation(
-                                                    context,
-                                                    account_id,
-                                                    () => deleteArbiter(
-                                                            account_id)
-                                                        .then((_) {
-                                                      fetchArbiters();
-                                                    }),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Divider(thickness: 2, height: 30),
+                            Expanded(
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Accounts',
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          SizedBox(height: 10),
+                                          IconButton(
+                                            onPressed: () {
+                                              _showAddAccountDialog(context);
+                                            },
+                                            icon: Icon(Icons.add),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  Colors.greenAccent,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 10),
+                                      FutureBuilder<List<Map<String, dynamic>>>(
+                                        future: getAccounts(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return Center(
+                                                child:
+                                                    CircularProgressIndicator());
+                                          } else if (snapshot.hasError) {
+                                            return Center(
+                                                child: Text(
+                                                    'Error: ${snapshot.error}'));
+                                          } else if (!snapshot.hasData ||
+                                              snapshot.data!.isEmpty) {
+                                            return Center(
+                                                child:
+                                                    Text('No accounts found.'));
+                                          } else {
+                                            List<Map<String, dynamic>>
+                                                accounts = snapshot.data!;
+
+                                            return Expanded(
+                                              child: ListView.builder(
+                                                itemCount: accounts.length,
+                                                itemBuilder: (context, index) {
+                                                  return Card(
+                                                    color: const Color.fromARGB(
+                                                        255, 204, 224, 224),
+                                                    margin:
+                                                        EdgeInsets.symmetric(
+                                                            vertical: 5),
+                                                    child: ListTile(
+                                                      leading: Icon(
+                                                          Icons.person,
+                                                          color: Colors.black),
+                                                      title: Text(
+                                                          accounts[index]
+                                                              ['username']!),
+                                                      subtitle: Text(
+                                                        accounts[index][
+                                                                    'arbi_id'] !=
+                                                                null
+                                                            ? 'Arbiter: ${accounts[index]['arbi_name']}'
+                                                            : 'Admin Account',
+                                                      ),
+                                                      trailing: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          IconButton(
+                                                            icon: Icon(
+                                                              Icons.edit,
+                                                              color:
+                                                                  Colors.green,
+                                                            ),
+                                                            onPressed: () {
+                                                              _showEditAccountDialog(
+                                                                  context,
+                                                                  accounts[
+                                                                      index]);
+                                                            },
+                                                          ),
+                                                          IconButton(
+                                                            icon: Icon(
+                                                                Icons.delete,
+                                                                color:
+                                                                    Colors.red),
+                                                            onPressed: () {
+                                                              String accountId =
+                                                                  accounts[
+                                                                          index]
+                                                                      [
+                                                                      'acc_id']!;
+                                                              _showDeleteConfirmation(
+                                                                  context,
+                                                                  accountId);
+                                                            },
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
                                                   );
                                                 },
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -167,7 +457,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Requested Documents',
+                                  'Retrieved Documents',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -288,34 +578,71 @@ class _SettingsPageState extends State<SettingsPage> {
                                                     ],
                                                   ),
                                                   Divider(),
-                                                  Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: ElevatedButton.icon(
-                                                      onPressed: () async {
-                                                        await updateDocumentStatus(
-                                                            retrieved['doc_id'],
-                                                            "Stored");
-                                                        ScaffoldMessenger.of(
-                                                                context)
-                                                            .showSnackBar(
-                                                          snackBarSuccess(
-                                                              'Archieved Successfully',
-                                                              context),
-                                                        );
-                                                        setState(() {});
-                                                      },
-                                                      icon: Icon(Icons.archive,
-                                                          color: Colors.white),
-                                                      label: Text("Archive"),
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor:
-                                                            Colors.blueGrey,
-                                                        foregroundColor:
-                                                            Colors.white,
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                          "${retrieved['timestamp']}"),
+                                                      ElevatedButton.icon(
+                                                        onPressed: () =>
+                                                            showDialog(
+                                                                context:
+                                                                    context,
+                                                                builder:
+                                                                    ((context) {
+                                                                  return AlertDialog(
+                                                                    title: Text(
+                                                                        "Case #: ${retrieved['doc_number']}"),
+                                                                    content: Text(
+                                                                        'Archive Case #: ${retrieved['doc_number']}?'),
+                                                                    actions: [
+                                                                      ElevatedButton(
+                                                                        style: ElevatedButton.styleFrom(
+                                                                            backgroundColor:
+                                                                                Colors.red,
+                                                                            foregroundColor: Colors.white),
+                                                                        onPressed:
+                                                                            () =>
+                                                                                Navigator.pop(context),
+                                                                        child: Text(
+                                                                            "Cancel"),
+                                                                      ),
+                                                                      ElevatedButton(
+                                                                          style: ElevatedButton.styleFrom(
+                                                                              backgroundColor: Colors
+                                                                                  .green,
+                                                                              foregroundColor: Colors
+                                                                                  .white),
+                                                                          onPressed:
+                                                                              () async {
+                                                                            await updateDocumentStatus(retrieved['doc_id'],
+                                                                                "Stored");
+                                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                                              snackBarSuccess('Archieved Successfully', context),
+                                                                            );
+                                                                            setState(() {});
+                                                                          },
+                                                                          child:
+                                                                              Text("Confirm"))
+                                                                    ],
+                                                                  );
+                                                                })),
+                                                        icon: Icon(
+                                                            Icons.archive,
+                                                            color:
+                                                                Colors.white),
+                                                        label: Text("Archive"),
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              Colors.blueGrey,
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                        ),
                                                       ),
-                                                    ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
@@ -340,260 +667,116 @@ class _SettingsPageState extends State<SettingsPage> {
         ));
   }
 
-  void _showAddUserDialog(BuildContext context,
-      {bool isEdit = false, Map<String, String>? user}) {
-    final nameController =
-        TextEditingController(text: isEdit && user != null ? user['name'] : '');
-    final roomController =
-        TextEditingController(text: isEdit && user != null ? user['room'] : '');
-    final usernameController = TextEditingController(
-        text: isEdit && user != null ? user['username'] : '');
-    final passwordController = TextEditingController(
-        text: isEdit && user != null ? user['password'] : '');
-    final passwordConfirmController = TextEditingController(
-        text: isEdit && user != null ? user['password'] : '');
-
-    final _formKey = GlobalKey<FormState>();
-
-    void submitUser() {
-      if (_formKey.currentState?.validate() ?? false) {
-        if (isEdit) {
-          updateArbiter(
-              user!['arbi_id']!,
-              nameController.text,
-              roomController.text,
-              usernameController.text,
-              passwordController.text);
-        } else {
-          _addNewArbiter(nameController.text, roomController.text,
-              usernameController.text, passwordController.text);
-        }
-        Navigator.of(context).pop();
-      }
-    }
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(isEdit ? 'Edit Arbiter' : 'Add Arbiter'),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFieldBoxWidget(
-                  controller: nameController,
-                  labelText: 'Arbiter Name',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a Name';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
-                TextFieldBoxWidget(
-                  controller: roomController,
-                  labelText: 'Room Number',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a Room Number';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
-                TextFieldBoxWidget(
-                  controller: usernameController,
-                  labelText: 'Username',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a username';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
-                TextFieldBoxWidget(
-                  controller: passwordController,
-                  labelText: 'Password',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    return null;
-                  },
-                  obscureText: true,
-                ),
-                SizedBox(height: 10),
-                TextFieldBoxWidget(
-                  controller: passwordConfirmController,
-                  labelText: 'Confirm Password',
-                  validator: (value) {
-                    if (value == null ||
-                        value.isEmpty ||
-                        passwordConfirmController.text !=
-                            passwordController.text) {
-                      return 'Password do not match';
-                    }
-                    return null;
-                  },
-                  obscureText: true,
-                ),
-                SizedBox(height: 10),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: submitUser,
-              child: Text(isEdit ? 'Update' : 'Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-/* 
   void _showAddAccountDialog(BuildContext context) {
-    final usernameController = TextEditingController();
-    final passwordController = TextEditingController();
-    final nameController = TextEditingController();
-    final roomController = TextEditingController();
     final _formKey = GlobalKey<FormState>();
-    String? _selectedArbiter;
-    // Add the account (user) by calling the addUser function
-    void addAccount() async {
-      if (_formKey.currentState?.validate() ?? false) {
-        // Call the addUser function with the appropriate parameters
-        _addNewUser(
-          usernameController.text,
-          passwordController.text,
-          _selectedArbiter!,
-        );
-
-        // If the user is successfully added, you can then close the dialog
-        Navigator.of(context).pop();
-      }
-    }
+    String username = '';
+    String password = '';
+    String? selectedArbiterId;
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: Text('Add Account'),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Name Field (for arbiter's name)
-                TextFieldBoxWidget(
-                  controller: nameController,
-                  labelText: 'Name',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a name';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: "Username",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                        ),
+                        onSaved: (value) => username = value!,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a username';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                        ),
+                        onSaved: (value) => password = value!,
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a password';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: getArbiters(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        }
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+                        final arbiters = snapshot.data ?? [];
 
-                // Room Field (for room number)
-                TextFieldBoxWidget(
-                  controller: roomController,
-                  labelText: 'Room Number',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a room number';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
+                        if (arbiters.isEmpty) {
+                          return Text('No arbiters available');
+                        }
 
-                // Username Field
-                TextFieldBoxWidget(
-                  controller: usernameController,
-                  labelText: 'Username',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a username';
-                    }
-                    return null;
-                  },
+                        return DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          isExpanded: true,
+                          value: selectedArbiterId,
+                          hint: Text('Select Arbiter'),
+                          onChanged: (newValue) {
+                            setState(() {
+                              selectedArbiterId = newValue;
+                            });
+                            print(selectedArbiterId);
+                          },
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: null,
+                              child: Text('Admin'),
+                            ),
+                            ...arbiters
+                                .map<DropdownMenuItem<String>>((arbiter) {
+                              return DropdownMenuItem<String>(
+                                value: arbiter['arbi_id'].toString(),
+                                child: Text(arbiter['name']),
+                              );
+                            }).toList(),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                SizedBox(height: 10),
-
-                // Password Field
-                TextFieldBoxWidget(
-                  controller: passwordController,
-                  labelText: 'Password',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    return null;
-                  },
-                  obscureText: true,
-                ),
-                SizedBox(height: 10),
-
-                // Dropdown for selecting a user type (if needed)
-                DropdownButtonFormField<String>(
-                  value: _selectedArbiter,
-                  items: arbiter
-                      .map((user) => DropdownMenuItem(
-                            value: user['arbi_id'],
-                            child: Text(user['name']!),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    _selectedArbiter = value!;
-                  },
-                  decoration: InputDecoration(
-                      labelText: 'User', border: OutlineInputBorder()),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent,
-                  foregroundColor: Colors.black),
-              onPressed: addAccount, // Call the addAccount method
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  } */
-
-  void _showDeleteConfirmation(
-      BuildContext context, String id, VoidCallback onDelete) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Confirm Deletion'),
-          content: Text(
-            'Are you sure you want to delete this item? This action cannot be undone.',
+              );
+            },
           ),
           actions: [
             TextButton(
@@ -601,12 +784,225 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                onDelete();
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
 
+                  if (selectedArbiterId == null) {
+                    await addAccount(username, password, null);
+                  } else {
+                    await addAccount(username, password, selectedArbiterId);
+                  }
+                  Navigator.of(context).pop();
+                  setState(() {});
+                }
+              },
+              child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddArbiterDialog(BuildContext context) {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController roomController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Add New Arbiter"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 300,
+                child: TextFieldBoxWidget(
+                  controller: nameController,
+                  labelText: "Arbiter Name",
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              SizedBox(
+                width: 300,
+                child: TextFieldBoxWidget(
+                  controller: roomController,
+                  labelText: "Room",
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                String name = nameController.text.trim();
+                String room = roomController.text.trim();
+
+                if (name.isNotEmpty && room.isNotEmpty) {
+                  addArbiter(name, room).then((success) {
+                    setState(() {
+                      //refresh
+                    });
+                    if (success) {
+                      fetchArbitersList();
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Arbiter added successfully!")),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Failed to add arbiter.")),
+                      );
+                    }
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Please fill in all fields.")),
+                  );
+                }
+              },
+              child: Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, String accountId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Deletion'),
+          content: Text(
+              'Are you sure you want to delete this account? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                await deleteAccount(accountId);
+
+                setState(() {});
                 Navigator.of(context).pop();
               },
               child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditAccountDialog(
+      BuildContext context, Map<String, dynamic> account) {
+    TextEditingController usernameController =
+        TextEditingController(text: account['username']);
+    TextEditingController passwordController =
+        TextEditingController(text: account['password']);
+
+    // Check if the account has an arbi_id, if not it's admin.
+    String? selectedArbiter =
+        account['arbi_id'] != null ? account['arbi_id'].toString() : null;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Account'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 300,
+                child: TextFieldBoxWidget(
+                  controller: usernameController,
+                  labelText: 'Username',
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              SizedBox(
+                width: 300,
+                child: TextFieldBoxWidget(
+                  controller: passwordController,
+                  obscureText: true,
+                  labelText: 'Password',
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                value: selectedArbiter,
+                hint: Text('Select Arbiter'),
+                items: [
+                  // Add "Admin" option if selectedArbiter is null
+                  DropdownMenuItem<String>(
+                    value: null,
+                    child: Text('Admin'),
+                  ),
+                  // Add other arbiters from the list
+                  ...arbiters.map((arbiter) {
+                    return DropdownMenuItem<String>(
+                      value: arbiter['arbi_id'].toString(),
+                      child: Text(arbiter['name']),
+                    );
+                  }).toList(),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedArbiter = value;
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                await editAccount(
+                  account['acc_id'],
+                  usernameController.text,
+                  passwordController.text,
+                  selectedArbiter == null ? null : selectedArbiter,
+                );
+                Navigator.of(context).pop();
+                setState(() {});
+              },
+              child: Text('Save'),
             ),
           ],
         );

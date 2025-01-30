@@ -27,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   String? _selectedArbiter;
   final TextEditingController _sackId = TextEditingController();
   TextEditingController rejectReason = TextEditingController();
+  TextEditingController search = TextEditingController();
 
   int currentPage = 0;
   final int pageSize = 5;
@@ -122,7 +123,7 @@ class _HomePageState extends State<HomePage> {
 
       var response = await request.send();
 
-      Navigator.pop(context); // Close the progress dialog
+      Navigator.pop(context);
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -134,10 +135,12 @@ class _HomePageState extends State<HomePage> {
           _selectedFilePath = null;
           _selectedArbiter1 = null;
         });
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           snackBarFailed('Failed to save', context),
         );
+        Navigator.pop(context);
       }
     } catch (e) {
       Navigator.pop(context); // Close the progress dialog
@@ -462,6 +465,7 @@ class _HomePageState extends State<HomePage> {
                             child: SizedBox(
                               width: MediaQuery.sizeOf(context).width / 2 - 100,
                               child: TextField(
+                                controller: search,
                                 onChanged: (value) {
                                   setState(() {
                                     query = value;
@@ -471,6 +475,19 @@ class _HomePageState extends State<HomePage> {
                                   hintText:
                                       'Search Case number, Complainant, or Respondent',
                                   prefixIcon: Icon(Icons.search),
+                                  suffixIcon: InkWell(
+                                    child: ClipRRect(
+                                        child: Icon(
+                                      Icons.cancel_sharp,
+                                      size: 26,
+                                    )),
+                                    onTap: () {
+                                      search.clear();
+                                      setState(() {
+                                        query = '';
+                                      });
+                                    },
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -1723,10 +1740,20 @@ class _HomePageState extends State<HomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Reason for Rejection'),
-          content: TextField(
-            controller: rejectReason,
-            autofocus: true,
-            decoration: InputDecoration(hintText: "Enter reason for rejection"),
+          content: SizedBox(
+            width: 400,
+            child: TextField(
+              controller: rejectReason,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: "Enter reason for rejection",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                labelStyle: TextStyle(),
+              ),
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -1736,7 +1763,9 @@ class _HomePageState extends State<HomePage> {
               },
               child: Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green, foregroundColor: Colors.white),
               onPressed: () async {
                 await rejectPending(sackId).then((_) {
                   setState(() {

@@ -231,7 +231,7 @@ class _SackContentState extends State<SackContent> {
               );
             },
           ),
-          child: Text('Add Document'),
+          child: Text('Add Case'),
         ),
       ],
       actionsAlignment: MainAxisAlignment.spaceAround,

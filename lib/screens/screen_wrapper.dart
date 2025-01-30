@@ -11,7 +11,7 @@ import 'package:nlrc_archive/screens/settings.dart';
 import 'package:nlrc_archive/sql_functions/sql_backend.dart';
 import 'package:nlrc_archive/sql_functions/sql_homepage.dart';
 
-List<Map<String, String>> arbiter = [];
+List<Map<String, dynamic>> arbiter = [];
 String? adminType;
 bool isFetching = false;
 var user;
@@ -34,19 +34,17 @@ class ScreenWrapper extends StatefulWidget {
 class _ScreenWrapperState extends State<ScreenWrapper> {
   int _selectedIndex = 0;
 
-  final List<Map<String, dynamic>> _menuItems = [
-    {'icon': Icons.home, 'label': 'Home'},
-    {'icon': Icons.settings, 'label': 'Settings'},
-  ];
-  final List<Widget> _pages = [HomePage(), SettingsPage()];
-  Future<void> fetchArbiters() async {
-    List<Map<String, String>> arbiters = await getArbiters();
-    setState(() {
-      arbiter = arbiters;
-      adminType = widget.adminType;
-      accountId = widget.accountId;
-    });
+  List<Map<String, dynamic>> get _menuItems {
+    List<Map<String, dynamic>> menuItems = [
+      {'icon': Icons.home, 'label': 'Home'},
+    ];
+    if (user == null) {
+      menuItems.add({'icon': Icons.settings, 'label': 'Settings'});
+    }
+    return menuItems;
   }
+
+  final List<Widget> _pages = [HomePage(), SettingsPage()];
 
   late Timer _timer;
 
@@ -55,7 +53,8 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
     user = widget.name;
     accountId = widget.accountId;
 
-    fetchArbiters();
+    fetchArbitersList();
+    fetchAccounts();
     fetch();
     _startPolling();
 
@@ -325,6 +324,7 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                           documents.clear();
                           sackPendingList.clear();
                           sackCreatedList.clear();
+                          requestedDocument.clear();
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(

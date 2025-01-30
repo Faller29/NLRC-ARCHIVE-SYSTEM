@@ -79,7 +79,7 @@ class _AddDocumentState extends State<AddDocument> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        'Add Document',
+        'Add Case',
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,

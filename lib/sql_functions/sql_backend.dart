@@ -2,57 +2,93 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:nlrc_archive/data/themeData.dart';
+import 'package:nlrc_archive/screens/settings.dart';
 
-Future<void> addArbiter(
-    String name, String room, String username, String password) async {
+Future<void> fetchArbitersList() async {
+  arbiters = await getArbiters();
+  print(arbiters);
+}
+
+Future<void> fetchAccounts() async {
+  accounts = await getAccounts();
+  print(fetchedAccounts);
+}
+
+Future<bool> addArbiter(String name, String room) async {
   final url = 'http://localhost/nlrc_archive_api/add_arbiter.php';
-
   try {
     final response = await http.post(
       Uri.parse(url),
       body: {
-        'name': name,
+        'arbi_name': name,
         'room': room,
-        'username': username,
-        'password': password,
       },
     );
 
     final responseData = json.decode(response.body);
-    if (responseData['status'] == 'success') {
-      print('Arbiter added successfully!');
-    } else {
-      print('Error: ${responseData['message']}');
-    }
-  } catch (error) {
-    print('Failed to add arbiter: $error');
+    return responseData['status'] == 'success';
+  } catch (e) {
+    print("Error adding arbiter: $e");
+    return false;
   }
 }
 
-Future<List<Map<String, String>>> getArbiters() async {
+Future<List<Map<String, dynamic>>> getArbiters() async {
   final url = 'http://localhost/nlrc_archive_api/get_arbiter.php';
 
   try {
     final response = await http.get(Uri.parse(url));
 
+    if (response.statusCode != 200) {
+      throw Exception('HTTP Error: ${response.statusCode}');
+    }
+
     final responseData = json.decode(response.body);
-    if (responseData['status'] == 'success') {
-      List<Map<String, String>> arbiters = [];
-      for (var arbiter in responseData['arbiters']) {
-        arbiters.add({
-          'arbi_id': arbiter['arbi_id'],
-          'name': arbiter['arbi_name'],
-          'room': arbiter['room'],
-          'username': arbiter['username'],
-          'password': arbiter['password'],
-        });
-      }
-      return arbiters;
+
+    if (responseData['status'] == 'success' &&
+        responseData['arbiters'] is List) {
+      return List<Map<String, dynamic>>.from(
+          responseData['arbiters'].map((arbiter) => {
+                'arbi_id': arbiter['arbi_id'].toString(),
+                'name': arbiter['arbi_name'] ?? 'Unknown',
+                'room': arbiter['room'] ?? 'No room',
+              }));
     } else {
-      throw Exception('No arbiters found');
+      throw Exception('No arbiters found or invalid response');
     }
   } catch (error) {
     print('Failed to fetch arbiters: $error');
+    return [];
+  }
+}
+
+Future<List<Map<String, dynamic>>> getAccounts() async {
+  final url = 'http://localhost/nlrc_archive_api/get_users.php';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode != 200) {
+      throw Exception('HTTP Error: ${response.statusCode}');
+    }
+
+    final responseData = json.decode(response.body);
+
+    if (responseData['status'] == 'success' &&
+        responseData['accounts'] is List) {
+      return List<Map<String, dynamic>>.from(
+          responseData['accounts'].map((account) => {
+                'acc_id': account['acc_id'].toString(),
+                'username': account['username'] ?? 'Unknown',
+                'password': account['password'] ?? '',
+                'arbi_id': account['arbi_id']?.toString(), // Nullable
+                'arbi_name': account['arbi_name'] ?? 'Admin Account',
+              }));
+    } else {
+      throw Exception('No accounts found or invalid response');
+    }
+  } catch (error) {
+    print('Failed to fetch accounts: $error');
     return [];
   }
 }
@@ -67,24 +103,6 @@ Future<void> deleteUserAccount(String userId) async {
     final data = jsonDecode(response.body);
     if (data['status'] == 'success') {
       print('User account deleted successfully');
-    } else {
-      print('Error: ${data['message']}');
-    }
-  } catch (error) {
-    print('Error: $error');
-  }
-}
-
-Future<void> deleteArbiter(String arbiId) async {
-  try {
-    final response = await http.post(
-      Uri.parse('http://localhost/nlrc_archive_api/delete_arbiter.php'),
-      body: {'arbi_id': arbiId},
-    );
-
-    final data = jsonDecode(response.body);
-    if (data['status'] == 'success') {
-      print('Arbiter and associated user account(s) deleted successfully');
     } else {
       print('Error: ${data['message']}');
     }
