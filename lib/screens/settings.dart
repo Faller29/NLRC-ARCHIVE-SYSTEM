@@ -620,8 +620,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                                             await updateDocumentStatus(retrieved['doc_id'],
                                                                                 "Stored");
                                                                             ScaffoldMessenger.of(context).showSnackBar(
-                                                                              snackBarSuccess('Archieved Successfully', context),
+                                                                              snackBarSuccess('Archived Successfully', context),
                                                                             );
+                                                                            Navigator.pop(context);
                                                                             setState(() {});
                                                                           },
                                                                           child:

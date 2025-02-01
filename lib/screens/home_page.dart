@@ -37,6 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    _selectedArbiter = user ?? null;
     _startPolling();
     fetchArbiters();
     super.initState();
@@ -211,7 +212,9 @@ class _HomePageState extends State<HomePage> {
         });
       });
       _sackId.clear();
-      _selectedArbiter = null;
+      if (user == null) {
+        _selectedArbiter = null;
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         snackBarFailed('Failed to Add Sack', context),
@@ -1275,165 +1278,172 @@ class _HomePageState extends State<HomePage> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (user == null)
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color.fromARGB(
-                                              255, 51, 38, 165),
-                                        ),
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return StatefulBuilder(
-                                                builder: (context, setState) {
-                                                  return AlertDialog(
-                                                    title: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: Text(
-                                                          'Upload Excel File'),
-                                                    ),
-                                                    content: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        ElevatedButton(
-                                                          style: ElevatedButton
-                                                              .styleFrom(
-                                                            backgroundColor:
-                                                                Colors
-                                                                    .orangeAccent,
-                                                            foregroundColor:
-                                                                Colors.white,
-                                                          ),
-                                                          onPressed: () {
-                                                            pickExcelFile(
-                                                                setState);
-                                                          },
-                                                          child: Text(
-                                                              'Select Excel File'),
-                                                        ),
-                                                        SizedBox(height: 20),
-                                                        Row(
-                                                          children: [
-                                                            Expanded(
-                                                              child: Text(
-                                                                _selectedFileName !=
-                                                                        null
-                                                                    ? 'Selected File: $_selectedFileName'
-                                                                    : 'No file selected',
-                                                                style: TextStyle(
-                                                                    color: Colors
-                                                                        .black54),
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                              ),
-                                                            ),
-                                                            if (_selectedFileName !=
-                                                                null)
-                                                              IconButton(
-                                                                icon: Icon(
-                                                                    Icons.close,
-                                                                    color: Colors
-                                                                        .red),
-                                                                onPressed: () {
-                                                                  setState(() {
-                                                                    _selectedFileName =
-                                                                        null;
-                                                                  });
-                                                                },
-                                                              ),
-                                                          ],
-                                                        ),
-                                                        SizedBox(height: 20),
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(8.0),
-                                                          child:
-                                                              DropdownButtonFormField<
-                                                                  String>(
-                                                            value:
-                                                                _selectedArbiter1,
-                                                            decoration:
-                                                                InputDecoration(
-                                                              labelText:
-                                                                  'Arbiter',
-                                                              border:
-                                                                  OutlineInputBorder(),
-                                                            ),
-                                                            items: _arbiterChoices
-                                                                .map((choice) {
-                                                              return DropdownMenuItem<
-                                                                  String>(
-                                                                value: choice,
-                                                                child: Text(
-                                                                    choice),
-                                                              );
-                                                            }).toList(),
-                                                            onChanged: (value) {
-                                                              setState(() {
-                                                                _selectedArbiter1 =
-                                                                    value;
-                                                                print(
-                                                                    "Selected Arbiter: $_selectedArbiter1");
-                                                              });
-                                                            },
-                                                          ),
-                                                        )
-                                                      ],
-                                                    ),
-                                                    actions: [
+                                    //if (user == null)
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color.fromARGB(
+                                            255, 51, 38, 165),
+                                      ),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return StatefulBuilder(
+                                              builder: (context, setState) {
+                                                return AlertDialog(
+                                                  title: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Text(
+                                                        'Upload Excel File'),
+                                                  ),
+                                                  content: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
                                                       ElevatedButton(
                                                         style: ElevatedButton
                                                             .styleFrom(
-                                                                backgroundColor:
-                                                                    Colors
-                                                                        .redAccent,
-                                                                foregroundColor:
-                                                                    Colors
-                                                                        .white),
-                                                        onPressed: () =>
-                                                            Navigator.pop(
-                                                                context),
-                                                        child: Text('Close'),
-                                                      ),
-                                                      ElevatedButton(
-                                                        style: ElevatedButton
-                                                            .styleFrom(
-                                                                backgroundColor:
-                                                                    Colors
-                                                                        .green,
-                                                                foregroundColor:
-                                                                    Colors
-                                                                        .white),
+                                                          backgroundColor:
+                                                              Colors
+                                                                  .orangeAccent,
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                        ),
                                                         onPressed: () {
-                                                          uploadExcelFile(
+                                                          pickExcelFile(
                                                               setState);
                                                         },
-                                                        child: Text('Save'),
+                                                        child: Text(
+                                                            'Select Excel File'),
                                                       ),
+                                                      SizedBox(height: 20),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              _selectedFileName !=
+                                                                      null
+                                                                  ? 'Selected File: $_selectedFileName'
+                                                                  : 'No file selected',
+                                                              style: TextStyle(
+                                                                  color: Colors
+                                                                      .black54),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ),
+                                                          if (_selectedFileName !=
+                                                              null)
+                                                            IconButton(
+                                                              icon: Icon(
+                                                                  Icons.close,
+                                                                  color: Colors
+                                                                      .red),
+                                                              onPressed: () {
+                                                                setState(() {
+                                                                  _selectedFileName =
+                                                                      null;
+                                                                });
+                                                              },
+                                                            ),
+                                                        ],
+                                                      ),
+                                                      SizedBox(height: 20),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child:
+                                                            DropdownButtonFormField<
+                                                                String>(
+                                                          value:
+                                                              _selectedArbiter,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            labelText:
+                                                                'Arbiter',
+                                                            border:
+                                                                OutlineInputBorder(),
+                                                          ),
+                                                          items: (user == null
+                                                                  ? _arbiterChoices
+                                                                  : [user])
+                                                              .map((choice) {
+                                                            return DropdownMenuItem<
+                                                                String>(
+                                                              value: choice,
+                                                              child:
+                                                                  Text(choice),
+                                                            );
+                                                          }).toList(),
+                                                          onChanged: user ==
+                                                                  null
+                                                              ? (value) {
+                                                                  setState(() {
+                                                                    _selectedArbiter =
+                                                                        value;
+                                                                    print(
+                                                                        "Selected Arbiter: $_selectedArbiter");
+                                                                  });
+                                                                }
+                                                              : null,
+                                                          isExpanded: true,
+                                                          disabledHint:
+                                                              user != null
+                                                                  ? Text(user)
+                                                                  : null,
+                                                        ),
+                                                      )
                                                     ],
-                                                    actionsAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceAround,
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          );
-                                        },
-                                        child: Text(
-                                          '+ Auto',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
+                                                  ),
+                                                  actions: [
+                                                    ElevatedButton(
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                              backgroundColor:
+                                                                  Colors
+                                                                      .redAccent,
+                                                              foregroundColor:
+                                                                  Colors.white),
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                              context),
+                                                      child: Text('Close'),
+                                                    ),
+                                                    ElevatedButton(
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                              backgroundColor:
+                                                                  Colors.green,
+                                                              foregroundColor:
+                                                                  Colors.white),
+                                                      onPressed: () {
+                                                        uploadExcelFile(
+                                                            setState);
+                                                      },
+                                                      child: Text('Save'),
+                                                    ),
+                                                  ],
+                                                  actionsAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceAround,
+                                                );
+                                              },
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: Text(
+                                        '+ Auto',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
                                       ),
+                                    ),
                                     SizedBox(width: 10),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
@@ -1469,7 +1479,9 @@ class _HomePageState extends State<HomePage> {
                                                         border:
                                                             OutlineInputBorder(),
                                                       ),
-                                                      items: _arbiterChoices
+                                                      items: (user == null
+                                                              ? _arbiterChoices
+                                                              : [user])
                                                           .map((choice) {
                                                         return DropdownMenuItem<
                                                             String>(
@@ -1477,14 +1489,20 @@ class _HomePageState extends State<HomePage> {
                                                           child: Text(choice),
                                                         );
                                                       }).toList(),
-                                                      onChanged: (value) {
-                                                        setState(() {
-                                                          _selectedArbiter =
-                                                              value;
-                                                          print(
-                                                              "Selected Arbiter: $_selectedArbiter");
-                                                        });
-                                                      },
+                                                      onChanged: user == null
+                                                          ? (value) {
+                                                              setState(() {
+                                                                _selectedArbiter =
+                                                                    value;
+                                                                print(
+                                                                    "Selected Arbiter: $_selectedArbiter");
+                                                              });
+                                                            }
+                                                          : null,
+                                                      isExpanded: true,
+                                                      disabledHint: user != null
+                                                          ? Text(user)
+                                                          : null,
                                                     ),
                                                   ],
                                                 ),
@@ -1592,7 +1610,7 @@ class _HomePageState extends State<HomePage> {
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
-                                    if (adminType == null)
+                                    if (user == null)
                                       Expanded(
                                         child: Text(
                                           'Action',
@@ -1666,7 +1684,7 @@ class _HomePageState extends State<HomePage> {
                                                     textAlign: TextAlign.center,
                                                   ),
                                                 ),
-                                                if (adminType == null)
+                                                if (user == null)
                                                   Expanded(
                                                     child: Row(
                                                       mainAxisAlignment:

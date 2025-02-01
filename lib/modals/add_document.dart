@@ -41,7 +41,7 @@ class _AddDocumentState extends State<AddDocument> {
         'doc_complainant': _comlainantController.text.trim(),
         'doc_verdict': _documentVerdictController.text.trim(),
         'status': 'Stored',
-        'doc_version': adminType == null ? 'old' : 'new',
+        'doc_version': user == null ? 'old' : 'new',
         'doc_volume': _documentVolumeController.text.trim(),
       };
       try {
