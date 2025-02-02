@@ -7,6 +7,7 @@ class TextFieldWidget extends StatefulWidget {
   final VoidCallback? onSuffixPressed;
   final String? Function(String?)? validator;
   final String labelText;
+
   final bool obscureText;
   final ValueChanged<String>? onFieldSubmitted;
 
@@ -70,6 +71,8 @@ class TextFieldBoxWidget extends StatefulWidget {
   final VoidCallback? onSuffixPressed;
   final String? Function(String?)? validator;
   final String labelText;
+  final String? hint;
+
   final bool obscureText;
   final ValueChanged<String>? onFieldSubmitted;
 
@@ -77,6 +80,7 @@ class TextFieldBoxWidget extends StatefulWidget {
     Key? key,
     required this.controller,
     required this.labelText,
+    this.hint,
     this.prefixIcon,
     this.suffixIcon,
     this.onSuffixPressed,
@@ -97,6 +101,7 @@ class _TextFieldBoxWidgetState extends State<TextFieldBoxWidget> {
       obscureText: widget.obscureText,
       decoration: InputDecoration(
         labelText: widget.labelText,
+        hintText: widget.hint,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
         ),

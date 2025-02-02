@@ -192,7 +192,7 @@ class _HomePageState extends State<HomePage> {
 
     var url = "http://localhost/nlrc_archive_api/add_sack.php";
     var response = await http.post(Uri.parse(url), body: {
-      "sack_name": _sackId.text,
+      "sack_name": "Sack ${_sackId.text}",
       "arbiter_number": _selectedArbiter,
       "sack_status": 'Creating',
       "acc_id": accountId,
@@ -435,11 +435,27 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ],
                           ),
-                          Image.asset(
-                            'assets/images/NLRC-WHITE.png',
-                            fit: BoxFit.scaleDown,
-                            width: 150,
-                            height: 150,
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black54,
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/NLRCnbg.png',
+                                fit: BoxFit.scaleDown,
+                                width: 150,
+                                height: 150,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1017,322 +1033,83 @@ class _HomePageState extends State<HomePage> {
                       child: Card(
                         child: Padding(
                           padding: const EdgeInsets.all(15.0),
-                          child: Stack(
+                          child: Column(
                             children: [
-                              Column(
-                                children: [
-                                  Text(
-                                    'Archive Document',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 50),
-                                  Expanded(
-                                    child: Container(
-                                      width:
-                                          MediaQuery.sizeOf(context).width / 2 -
-                                              100,
-                                      child: FutureBuilder<List<dynamic>>(
-                                          future: fetchCreatedSack(),
-                                          builder: (context, snapshot) {
-                                            if (snapshot.connectionState ==
-                                                ConnectionState.waiting) {
-                                              return Center(
-                                                  child:
-                                                      CircularProgressIndicator());
-                                            } else if (snapshot.hasError) {
-                                              return Center(
-                                                  child: Text(
-                                                      'Error: ${snapshot.error}'));
-                                            } else if (!snapshot.hasData ||
-                                                snapshot.data!.isEmpty) {
-                                              return Center(
-                                                  child: Text(
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 14,
-                                                          color: Colors.grey),
-                                                      'There is no records found'));
-                                            }
-                                            sackCreatedList = snapshot.data!;
-                                            return sackCreatedList.isEmpty
-                                                ? Center(
-                                                    child: Text(
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 14,
-                                                            color: Colors.grey),
-                                                        'There is no records found'))
-                                                : ListView.builder(
-                                                    shrinkWrap: true,
-                                                    physics:
-                                                        NeverScrollableScrollPhysics(),
-                                                    itemCount:
-                                                        sackCreatedList.length,
-                                                    itemBuilder:
-                                                        (context, index) {
-                                                      final sack =
-                                                          sackCreatedList[
-                                                              index];
-
-                                                      bool isRejected =
-                                                          sack['status'] ==
-                                                              'Reject';
-
-                                                      return Column(
-                                                        children: [
-                                                          Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10),
-                                                              color: isRejected
-                                                                  ? Colors.red
-                                                                  : Colors.green[
-                                                                      200],
-                                                            ),
-                                                            child: ListTile(
-                                                              title: Text(
-                                                                sack['sack_name'] ??
-                                                                    'No Sack Name',
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 16,
-                                                                  color: isRejected
-                                                                      ? Colors
-                                                                          .white
-                                                                      : Colors
-                                                                          .black,
-                                                                ),
-                                                              ),
-                                                              subtitle: Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  Text(
-                                                                    sack['arbiter_number'] ??
-                                                                        'No Arbiter Name',
-                                                                    style:
-                                                                        TextStyle(
-                                                                      fontSize:
-                                                                          14,
-                                                                      color: isRejected
-                                                                          ? Colors
-                                                                              .white70
-                                                                          : Colors
-                                                                              .grey,
-                                                                    ),
-                                                                  ),
-                                                                  if (isRejected)
-                                                                    Text(
-                                                                      "Rejected: ${sack['admin_message'] ?? 'No reason provided'}",
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontStyle:
-                                                                            FontStyle.italic,
-                                                                        color: Colors
-                                                                            .white70,
-                                                                      ),
-                                                                    ),
-                                                                ],
-                                                              ),
-                                                              trailing: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
-                                                                children: [
-                                                                  IconButton(
-                                                                    icon: Icon(
-                                                                      Icons
-                                                                          .delete,
-                                                                      color: isRejected
-                                                                          ? Colors
-                                                                              .white
-                                                                          : Colors
-                                                                              .red,
-                                                                    ),
-                                                                    onPressed: () =>
-                                                                        showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          ((context) {
-                                                                        return AlertDialog(
-                                                                          contentPadding: EdgeInsets.symmetric(
-                                                                              vertical: 40,
-                                                                              horizontal: 30),
-                                                                          title:
-                                                                              Text('Delete ${sack['sack_name']}'),
-                                                                          content:
-                                                                              Text('Are you sure you want to delete SACK ${sack['sack_name']}?'),
-                                                                          actions: [
-                                                                            ElevatedButton(
-                                                                              style: ElevatedButton.styleFrom(
-                                                                                backgroundColor: Colors.redAccent,
-                                                                                foregroundColor: Colors.white,
-                                                                              ),
-                                                                              onPressed: () => Navigator.pop(context),
-                                                                              child: Text('Cancel'),
-                                                                            ),
-                                                                            ElevatedButton(
-                                                                              style: ElevatedButton.styleFrom(
-                                                                                backgroundColor: Colors.green,
-                                                                                foregroundColor: Colors.white,
-                                                                              ),
-                                                                              onPressed: () => deleteSack(
-                                                                                sack['sack_id'].toString(),
-                                                                                index,
-                                                                              ),
-                                                                              child: Text('Confirm'),
-                                                                            ),
-                                                                          ],
-                                                                          actionsAlignment:
-                                                                              MainAxisAlignment.spaceBetween,
-                                                                        );
-                                                                      }),
-                                                                    ),
-                                                                  ),
-                                                                  IconButton(
-                                                                    icon: Icon(
-                                                                      Icons
-                                                                          .send,
-                                                                      color: isRejected
-                                                                          ? Colors
-                                                                              .white
-                                                                          : Colors
-                                                                              .green,
-                                                                    ),
-                                                                    onPressed:
-                                                                        () async {
-                                                                      final sackId =
-                                                                          sack['sack_id']
-                                                                              .toString();
-                                                                      final response =
-                                                                          await sendForApproval(
-                                                                              sackId);
-
-                                                                      if (response[
-                                                                              'status'] ==
-                                                                          'success') {
-                                                                        ScaffoldMessenger.of(context)
-                                                                            .showSnackBar(
-                                                                          snackBarSuccess(
-                                                                              'Sack sent for approval',
-                                                                              context),
-                                                                        );
-                                                                        setState(
-                                                                            () {
-                                                                          sack['status'] =
-                                                                              'pending';
-                                                                        });
-                                                                      } else {
-                                                                        ScaffoldMessenger.of(context)
-                                                                            .showSnackBar(
-                                                                          snackBarFailed(
-                                                                              '${response['message']}',
-                                                                              context),
-                                                                        );
-                                                                      }
-                                                                    },
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              onTap: () =>
-                                                                  showDialog(
-                                                                context:
-                                                                    context,
-                                                                builder:
-                                                                    (context) {
-                                                                  return SackContent(
-                                                                    sackId: sack[
-                                                                        'sack_id'],
-                                                                    sackName: sack[
-                                                                        'sack_name'],
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Divider(),
-                                                        ],
-                                                      );
-                                                    },
-                                                  );
-                                          }),
-                                    ),
-                                  )
-                                ],
+                              Text(
+                                'Archive Document',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              Positioned(
-                                top: 35,
-                                right: 0,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    //if (user == null)
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 51, 38, 165),
-                                      ),
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return StatefulBuilder(
-                                              builder: (context, setState) {
-                                                return AlertDialog(
-                                                  title: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Text(
-                                                        'Upload Excel File'),
-                                                  ),
-                                                  content: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      ElevatedButton(
-                                                        style: ElevatedButton
-                                                            .styleFrom(
-                                                          backgroundColor:
-                                                              Colors
-                                                                  .orangeAccent,
-                                                          foregroundColor:
-                                                              Colors.white,
-                                                        ),
-                                                        onPressed: () {
-                                                          pickExcelFile(
-                                                              setState);
-                                                        },
-                                                        child: Text(
-                                                            'Select Excel File'),
-                                                      ),
-                                                      SizedBox(height: 20),
-                                                      Row(
+                              SizedBox(
+                                height: 15,
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  //if (user == null)
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 51, 38, 165),
+                                    ),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return StatefulBuilder(
+                                            builder: (context, setState) {
+                                              return AlertDialog(
+                                                title: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child:
+                                                      Text('Upload Excel File'),
+                                                ),
+                                                content: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Container(
+                                                      width: 250,
+                                                      decoration: BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(20),
+                                                          border: Border.all(
+                                                            width: 1,
+                                                            color: Colors.green,
+                                                          )),
+                                                      child: Row(
                                                         children: [
                                                           Expanded(
-                                                            child: Text(
-                                                              _selectedFileName !=
-                                                                      null
-                                                                  ? 'Selected File: $_selectedFileName'
-                                                                  : 'No file selected',
-                                                              style: TextStyle(
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8.0),
+                                                              child: Text(
+                                                                _selectedFileName !=
+                                                                        null
+                                                                    ? 'File: $_selectedFileName'
+                                                                    : 'No file selected',
+                                                                style:
+                                                                    TextStyle(
                                                                   color: Colors
-                                                                      .black54),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
+                                                                      .black54,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                              ),
                                                             ),
                                                           ),
                                                           if (_selectedFileName !=
@@ -1351,170 +1128,75 @@ class _HomePageState extends State<HomePage> {
                                                             ),
                                                         ],
                                                       ),
-                                                      SizedBox(height: 20),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(8.0),
-                                                        child:
-                                                            DropdownButtonFormField<
-                                                                String>(
-                                                          value:
-                                                              _selectedArbiter,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            labelText:
-                                                                'Arbiter',
-                                                            border:
-                                                                OutlineInputBorder(),
-                                                          ),
-                                                          items: (user == null
-                                                                  ? _arbiterChoices
-                                                                  : [user])
-                                                              .map((choice) {
-                                                            return DropdownMenuItem<
-                                                                String>(
-                                                              value: choice,
-                                                              child:
-                                                                  Text(choice),
-                                                            );
-                                                          }).toList(),
-                                                          onChanged: user ==
-                                                                  null
-                                                              ? (value) {
-                                                                  setState(() {
-                                                                    _selectedArbiter =
-                                                                        value;
-                                                                    print(
-                                                                        "Selected Arbiter: $_selectedArbiter");
-                                                                  });
-                                                                }
-                                                              : null,
-                                                          isExpanded: true,
-                                                          disabledHint:
-                                                              user != null
-                                                                  ? Text(user)
-                                                                  : null,
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                  actions: [
+                                                    ),
+                                                    SizedBox(height: 5),
                                                     ElevatedButton(
                                                       style: ElevatedButton
                                                           .styleFrom(
-                                                              backgroundColor:
-                                                                  Colors
-                                                                      .redAccent,
-                                                              foregroundColor:
-                                                                  Colors.white),
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                              context),
-                                                      child: Text('Close'),
-                                                    ),
-                                                    ElevatedButton(
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                              backgroundColor:
-                                                                  Colors.green,
-                                                              foregroundColor:
-                                                                  Colors.white),
-                                                      onPressed: () {
-                                                        uploadExcelFile(
-                                                            setState);
-                                                      },
-                                                      child: Text('Save'),
-                                                    ),
-                                                  ],
-                                                  actionsAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceAround,
-                                                );
-                                              },
-                                            );
-                                          },
-                                        );
-                                      },
-                                      child: Text(
-                                        '+ Auto',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.greenAccent,
-                                      ),
-                                      onPressed: () => showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return StatefulBuilder(
-                                            builder: (context, setState) {
-                                              return AlertDialog(
-                                                title: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Text('Create Sack'),
-                                                ),
-                                                content: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    TextFieldBoxWidget(
-                                                      controller: _sackId,
-                                                      labelText:
-                                                          'Enter Sack ID',
-                                                    ),
-                                                    SizedBox(height: 20),
-                                                    DropdownButtonFormField<
-                                                        String>(
-                                                      value: _selectedArbiter,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        labelText: 'Arbiter',
-                                                        border:
-                                                            OutlineInputBorder(),
+                                                        backgroundColor:
+                                                            Colors.green,
+                                                        foregroundColor:
+                                                            Colors.white,
                                                       ),
-                                                      items: (user == null
-                                                              ? _arbiterChoices
-                                                              : [user])
-                                                          .map((choice) {
-                                                        return DropdownMenuItem<
-                                                            String>(
-                                                          value: choice,
-                                                          child: Text(choice),
-                                                        );
-                                                      }).toList(),
-                                                      onChanged: user == null
-                                                          ? (value) {
-                                                              setState(() {
-                                                                _selectedArbiter =
-                                                                    value;
-                                                                print(
-                                                                    "Selected Arbiter: $_selectedArbiter");
-                                                              });
-                                                            }
-                                                          : null,
-                                                      isExpanded: true,
-                                                      disabledHint: user != null
-                                                          ? Text(user)
-                                                          : null,
+                                                      onPressed: () {
+                                                        pickExcelFile(setState);
+                                                      },
+                                                      child: Text(
+                                                          'Select Excel File'),
                                                     ),
+                                                    SizedBox(height: 10),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      child:
+                                                          DropdownButtonFormField<
+                                                              String>(
+                                                        value: _selectedArbiter,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          labelText: 'Arbiter',
+                                                          border:
+                                                              OutlineInputBorder(),
+                                                        ),
+                                                        items: (user == null
+                                                                ? _arbiterChoices
+                                                                : [user])
+                                                            .map((choice) {
+                                                          return DropdownMenuItem<
+                                                              String>(
+                                                            value: choice,
+                                                            child: Text(choice),
+                                                          );
+                                                        }).toList(),
+                                                        onChanged: user == null
+                                                            ? (value) {
+                                                                setState(() {
+                                                                  _selectedArbiter =
+                                                                      value;
+                                                                  print(
+                                                                      "Selected Arbiter: $_selectedArbiter");
+                                                                });
+                                                              }
+                                                            : null,
+                                                        isExpanded: true,
+                                                        disabledHint:
+                                                            user != null
+                                                                ? Text(user)
+                                                                : null,
+                                                      ),
+                                                    )
                                                   ],
                                                 ),
                                                 actions: [
                                                   ElevatedButton(
                                                     style: ElevatedButton
                                                         .styleFrom(
-                                                      backgroundColor:
-                                                          Colors.redAccent,
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                    ),
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .redAccent,
+                                                            foregroundColor:
+                                                                Colors.white),
                                                     onPressed: () =>
                                                         Navigator.pop(context),
                                                     child: Text('Close'),
@@ -1522,13 +1204,14 @@ class _HomePageState extends State<HomePage> {
                                                   ElevatedButton(
                                                     style: ElevatedButton
                                                         .styleFrom(
-                                                      backgroundColor:
-                                                          Colors.green,
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                    ),
-                                                    onPressed: addSack,
-                                                    child: Text('Add'),
+                                                            backgroundColor:
+                                                                Colors.green,
+                                                            foregroundColor:
+                                                                Colors.white),
+                                                    onPressed: () {
+                                                      uploadExcelFile(setState);
+                                                    },
+                                                    child: Text('Save'),
                                                   ),
                                                 ],
                                                 actionsAlignment:
@@ -1538,16 +1221,395 @@ class _HomePageState extends State<HomePage> {
                                             },
                                           );
                                         },
-                                      ),
-                                      child: Text(
-                                        '+ Sack',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      '+ Auto',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                  SizedBox(width: 10),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.greenAccent,
+                                    ),
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return StatefulBuilder(
+                                          builder: (context, setState) {
+                                            return AlertDialog(
+                                              title: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Text('Create Sack'),
+                                              ),
+                                              content: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  TextField(
+                                                    decoration: InputDecoration(
+                                                      label:
+                                                          Text("Sack Number"),
+                                                      hintText:
+                                                          'Enter Sack Number',
+                                                      border:
+                                                          OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
+                                                      ),
+                                                      prefixIcon: Padding(
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                                horizontal: 12,
+                                                                vertical: 14),
+                                                        child: Text(
+                                                          "Sack: ",
+                                                          style: TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500),
+                                                        ),
+                                                      ),
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                              horizontal: 20,
+                                                              vertical: 14),
+                                                      labelStyle: TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                    controller: _sackId,
+                                                  ),
+                                                  SizedBox(height: 20),
+                                                  DropdownButtonFormField<
+                                                      String>(
+                                                    value: _selectedArbiter,
+                                                    decoration: InputDecoration(
+                                                      labelText: 'Arbiter',
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                    ),
+                                                    items: (user == null
+                                                            ? _arbiterChoices
+                                                            : [user])
+                                                        .map((choice) {
+                                                      return DropdownMenuItem<
+                                                          String>(
+                                                        value: choice,
+                                                        child: Text(choice),
+                                                      );
+                                                    }).toList(),
+                                                    onChanged: user == null
+                                                        ? (value) {
+                                                            setState(() {
+                                                              _selectedArbiter =
+                                                                  value;
+                                                              print(
+                                                                  "Selected Arbiter: $_selectedArbiter");
+                                                            });
+                                                          }
+                                                        : null,
+                                                    isExpanded: true,
+                                                    disabledHint: user != null
+                                                        ? Text(user)
+                                                        : null,
+                                                  ),
+                                                ],
+                                              ),
+                                              actions: [
+                                                ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.redAccent,
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.pop(context),
+                                                  child: Text('Close'),
+                                                ),
+                                                ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.green,
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                  ),
+                                                  onPressed: addSack,
+                                                  child: Text('Add'),
+                                                ),
+                                              ],
+                                              actionsAlignment:
+                                                  MainAxisAlignment.spaceAround,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    child: Text(
+                                      '+ Sack',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Expanded(
+                                child: Container(
+                                  width: MediaQuery.sizeOf(context).width / 2 -
+                                      100,
+                                  child: FutureBuilder<List<dynamic>>(
+                                      future: fetchCreatedSack(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        } else if (snapshot.hasError) {
+                                          return Center(
+                                              child: Text(
+                                                  'Error: ${snapshot.error}'));
+                                        } else if (!snapshot.hasData ||
+                                            snapshot.data!.isEmpty) {
+                                          return Center(
+                                              child: Text(
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 14,
+                                                      color: Colors.grey),
+                                                  'There is no records found'));
+                                        }
+                                        sackCreatedList = snapshot.data!;
+                                        return sackCreatedList.isEmpty
+                                            ? Center(
+                                                child: Text(
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 14,
+                                                        color: Colors.grey),
+                                                    'There is no records found'))
+                                            : ListView.builder(
+                                                shrinkWrap: true,
+                                                physics:
+                                                    NeverScrollableScrollPhysics(),
+                                                itemCount:
+                                                    sackCreatedList.length,
+                                                itemBuilder: (context, index) {
+                                                  final sack =
+                                                      sackCreatedList[index];
+
+                                                  bool isRejected =
+                                                      sack['status'] ==
+                                                          'Reject';
+
+                                                  return Column(
+                                                    children: [
+                                                      Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                          color: isRejected
+                                                              ? Colors.red
+                                                              : Colors
+                                                                  .green[200],
+                                                        ),
+                                                        child: ListTile(
+                                                          title: Text(
+                                                            sack['sack_name'] ??
+                                                                'No Sack Name',
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              color: isRejected
+                                                                  ? Colors.white
+                                                                  : Colors
+                                                                      .black,
+                                                            ),
+                                                          ),
+                                                          subtitle: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Text(
+                                                                sack['arbiter_number'] ??
+                                                                    'No Arbiter Name',
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize: 14,
+                                                                  color: isRejected
+                                                                      ? Colors
+                                                                          .white70
+                                                                      : Colors
+                                                                          .grey,
+                                                                ),
+                                                              ),
+                                                              if (isRejected)
+                                                                Text(
+                                                                  "Rejected: ${sack['admin_message'] ?? 'No reason provided'}",
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        14,
+                                                                    fontStyle:
+                                                                        FontStyle
+                                                                            .italic,
+                                                                    color: Colors
+                                                                        .white70,
+                                                                  ),
+                                                                ),
+                                                            ],
+                                                          ),
+                                                          trailing: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              IconButton(
+                                                                icon: Icon(
+                                                                  Icons.delete,
+                                                                  color: isRejected
+                                                                      ? Colors
+                                                                          .white
+                                                                      : Colors
+                                                                          .red,
+                                                                ),
+                                                                onPressed: () =>
+                                                                    showDialog(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      ((context) {
+                                                                    return AlertDialog(
+                                                                      contentPadding: EdgeInsets.symmetric(
+                                                                          vertical:
+                                                                              40,
+                                                                          horizontal:
+                                                                              30),
+                                                                      title: Text(
+                                                                          'Delete ${sack['sack_name']}'),
+                                                                      content: Text(
+                                                                          'Are you sure you want to delete SACK ${sack['sack_name']}?'),
+                                                                      actions: [
+                                                                        ElevatedButton(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
+                                                                            backgroundColor:
+                                                                                Colors.redAccent,
+                                                                            foregroundColor:
+                                                                                Colors.white,
+                                                                          ),
+                                                                          onPressed: () =>
+                                                                              Navigator.pop(context),
+                                                                          child:
+                                                                              Text('Cancel'),
+                                                                        ),
+                                                                        ElevatedButton(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
+                                                                            backgroundColor:
+                                                                                Colors.green,
+                                                                            foregroundColor:
+                                                                                Colors.white,
+                                                                          ),
+                                                                          onPressed: () =>
+                                                                              deleteSack(
+                                                                            sack['sack_id'].toString(),
+                                                                            index,
+                                                                          ),
+                                                                          child:
+                                                                              Text('Confirm'),
+                                                                        ),
+                                                                      ],
+                                                                      actionsAlignment:
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
+                                                                    );
+                                                                  }),
+                                                                ),
+                                                              ),
+                                                              IconButton(
+                                                                icon: Icon(
+                                                                  Icons.send,
+                                                                  color: isRejected
+                                                                      ? Colors
+                                                                          .white
+                                                                      : Colors
+                                                                          .green,
+                                                                ),
+                                                                onPressed:
+                                                                    () async {
+                                                                  final sackId =
+                                                                      sack['sack_id']
+                                                                          .toString();
+                                                                  final response =
+                                                                      await sendForApproval(
+                                                                          sackId);
+
+                                                                  if (response[
+                                                                          'status'] ==
+                                                                      'success') {
+                                                                    ScaffoldMessenger.of(
+                                                                            context)
+                                                                        .showSnackBar(
+                                                                      snackBarSuccess(
+                                                                          'Sack sent for approval',
+                                                                          context),
+                                                                    );
+                                                                    setState(
+                                                                        () {
+                                                                      sack['status'] =
+                                                                          'pending';
+                                                                    });
+                                                                  } else {
+                                                                    ScaffoldMessenger.of(
+                                                                            context)
+                                                                        .showSnackBar(
+                                                                      snackBarFailed(
+                                                                          '${response['message']}',
+                                                                          context),
+                                                                    );
+                                                                  }
+                                                                },
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          onTap: () =>
+                                                              showDialog(
+                                                            context: context,
+                                                            builder: (context) {
+                                                              return SackContent(
+                                                                sackId: sack[
+                                                                    'sack_id'],
+                                                                sackName: sack[
+                                                                    'sack_name'],
+                                                              );
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Divider(),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                      }),
                                 ),
                               )
                             ],
@@ -1723,7 +1785,13 @@ class _HomePageState extends State<HomePage> {
                                                             if (sackId !=
                                                                 null) {
                                                               await rejectSack(
-                                                                  sackId);
+                                                                      sackId)
+                                                                  .then(
+                                                                      (_) async {
+                                                                setState(() {
+                                                                  //ref
+                                                                });
+                                                              });
                                                             }
                                                           },
                                                         ),

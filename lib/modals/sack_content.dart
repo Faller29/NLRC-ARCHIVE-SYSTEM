@@ -110,7 +110,7 @@ class _SackContentState extends State<SackContent> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        'Sack ${widget.sackName}',
+        '${widget.sackName}',
         style: TextStyle(fontWeight: FontWeight.bold),
         textAlign: TextAlign.center,
       ),
