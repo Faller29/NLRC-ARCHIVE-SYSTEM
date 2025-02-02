@@ -11,8 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_FILES['file']) && isset($_POST['arbiter_number']) && isset($_POST['account_id'])) {
         $arbiterNumber = $_POST['arbiter_number'];
         $accountId = (int) $_POST['account_id'];
-        $doc_version = $_POST['doc_version'] ?? null;
-        $sack_status = 'Stored';
+        $sack_status = 'Pending';
 
         // Handle file upload and read Excel file
         $fileTmpPath = $_FILES['file']['tmp_name'];
@@ -33,10 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Insert data into tbl_document
                 $stmtDoc = $con->prepare(
-                    "INSERT INTO tbl_document (sack_id, doc_number, doc_complainant, doc_respondent, volume, status, version) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO tbl_document (sack_id, doc_number, doc_complainant, doc_respondent, volume, status, version) VALUES (?, ?, ?, ?, ?, ?, ?)"
                 );
-                
+
+                // Start from row 1, skip the header row if it exists
                 foreach ($rows as $index => $row) {
                     if ($index === 0) continue; // Skip header row if applicable
                     $docNumber = $row[0] ?? '';
@@ -44,13 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $docRespondent = $row[2] ?? '';
                     $volume = $row[3] ?? '';
                     $doc_status = 'Stored';
-                
+                    $doc_version = 'old';
+
                     if (!empty($docNumber)) {
                         $stmtDoc->bind_param("issssss", $sackId, $docNumber, $docComplainant, $docRespondent, $volume, $doc_status, $doc_version);
                         $stmtDoc->execute();
                     }
                 }
-                
 
                 $stmtDoc->close();
             }

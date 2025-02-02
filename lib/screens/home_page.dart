@@ -118,7 +118,6 @@ class _HomePageState extends State<HomePage> {
       request.fields['arbiter_number'] = _selectedArbiter1!;
       request.fields['account_id'] = accountId;
       request.fields['doc_version'] = user == null ? 'old' : 'new';
-      // ✅ Include doc_version dynamically
       request.files.add(await http.MultipartFile.fromPath(
         'file',
         _selectedFilePath!,
@@ -143,6 +142,7 @@ class _HomePageState extends State<HomePage> {
           _selectedFileName = null;
           _selectedFilePath = null;
         }
+
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1229,7 +1229,11 @@ class _HomePageState extends State<HomePage> {
                                             },
                                           );
                                         },
-                                      );
+                                      ).then((_) {
+                                        setState(() {
+                                          //ref
+                                        });
+                                      });
                                     },
                                     child: Text(
                                       '+ Auto',
@@ -1662,7 +1666,7 @@ class _HomePageState extends State<HomePage> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        'Sack ID',
+                                        'Sack #',
                                         style: TextStyle(
                                           fontSize: 16,
                                           color: Colors.white,
@@ -1672,7 +1676,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     Expanded(
                                       child: Text(
-                                        'Status',
+                                        'Arbiter',
                                         style: TextStyle(
                                           fontSize: 16,
                                           color: Colors.white,
@@ -1736,7 +1740,8 @@ class _HomePageState extends State<HomePage> {
                                               children: [
                                                 Expanded(
                                                   child: Text(
-                                                    sack['sack_name'] ?? 'N/A',
+                                                    "${sack['sack_name']}" ??
+                                                        'N/A',
                                                     style: TextStyle(
                                                       fontSize: 14,
                                                       color: Colors.white,
@@ -1746,7 +1751,8 @@ class _HomePageState extends State<HomePage> {
                                                 ),
                                                 Expanded(
                                                   child: Text(
-                                                    'Pending',
+                                                    sack['arbiter_number'] ??
+                                                        'N/A',
                                                     style: TextStyle(
                                                       fontSize: 14,
                                                       color: Colors.white,
