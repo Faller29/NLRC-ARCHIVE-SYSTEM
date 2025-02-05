@@ -71,6 +71,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/profile/
+    - assets/images/excel_img/
 
   # assets:
   #   - images/a_dot_burr.jpeg

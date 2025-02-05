@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:nlrc_archive/main.dart';
 import 'dart:convert';
 
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
@@ -6,7 +7,7 @@ import 'package:nlrc_archive/screens/screen_wrapper.dart';
 Future<Map<String, dynamic>> sendForApproval(String sackId) async {
   try {
     final response = await http.post(
-      Uri.parse('http://localhost/nlrc_archive_api/send_sack.php'),
+      Uri.parse('http://$serverIP/nlrc_archive_api/send_sack.php'),
       body: {'sack_id': sackId},
     );
 
@@ -22,7 +23,7 @@ Future<Map<String, dynamic>> sendForApproval(String sackId) async {
 
 Future<List<Map<String, dynamic>>> fetchDocuments(
     String query, String? user) async {
-  var url = "http://localhost/nlrc_archive_api/retrieve_data.php";
+  var url = "http://$serverIP/nlrc_archive_api/retrieve_data.php";
 
   final uri = Uri.parse(url).replace(queryParameters: {
     'Query': query,
@@ -61,7 +62,7 @@ Future<List<Map<String, dynamic>>> fetchDocuments(
 }
 
 Future<List<dynamic>> fetchCreatedSack() async {
-  var url = "http://localhost/nlrc_archive_api/retrieve_created_sack.php";
+  var url = "http://$serverIP/nlrc_archive_api/retrieve_created_sack.php";
 
   final uri = Uri.parse(url).replace(queryParameters: {
     'acc_id': accountId,
@@ -81,7 +82,7 @@ Future<List<dynamic>> fetchCreatedSack() async {
 }
 
 Future<List<dynamic>> fetchPendingSack() async {
-  var url = "http://localhost/nlrc_archive_api/retrieve_pending_sack.php";
+  var url = "http://$serverIP/nlrc_archive_api/retrieve_pending_sack.php";
   try {
     var response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -100,7 +101,7 @@ Future<bool> requestRetrieval(var docId, var accountId) async {
     String docIdStr = docId.toString();
 
     final response = await http.post(
-      Uri.parse('http://localhost/nlrc_archive_api/request_document.php'),
+      Uri.parse('http://$serverIP/nlrc_archive_api/request_document.php'),
       body: {'doc_id': docIdStr, "acc_id": accountId},
     );
 

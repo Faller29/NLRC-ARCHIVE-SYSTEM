@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:nlrc_archive/data/themeData.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/screens/settings.dart';
 
 Future<void> fetchArbitersList() async {
@@ -15,7 +16,7 @@ Future<void> fetchAccounts() async {
 }
 
 Future<bool> addArbiter(String name, String room) async {
-  final url = 'http://localhost/nlrc_archive_api/add_arbiter.php';
+  final url = 'http://$serverIP/nlrc_archive_api/add_arbiter.php';
   try {
     final response = await http.post(
       Uri.parse(url),
@@ -34,7 +35,7 @@ Future<bool> addArbiter(String name, String room) async {
 }
 
 Future<List<Map<String, dynamic>>> getArbiters() async {
-  final url = 'http://localhost/nlrc_archive_api/get_arbiter.php';
+  final url = 'http://$serverIP/nlrc_archive_api/get_arbiter.php';
 
   try {
     final response = await http.get(Uri.parse(url));
@@ -63,7 +64,7 @@ Future<List<Map<String, dynamic>>> getArbiters() async {
 }
 
 Future<List<Map<String, dynamic>>> getAccounts() async {
-  final url = 'http://localhost/nlrc_archive_api/get_users.php';
+  final url = 'http://$serverIP/nlrc_archive_api/get_users.php';
 
   try {
     final response = await http.get(Uri.parse(url));
@@ -96,7 +97,7 @@ Future<List<Map<String, dynamic>>> getAccounts() async {
 Future<void> deleteUserAccount(String userId) async {
   try {
     final response = await http.post(
-      Uri.parse('http://localhost/nlrc_archive_api/delete_user.php'),
+      Uri.parse('http://$serverIP/nlrc_archive_api/delete_user.php'),
       body: {'user_id': userId},
     );
 
@@ -114,7 +115,7 @@ Future<void> deleteUserAccount(String userId) async {
 Future<void> updateArbiter(String arbiId, String name, String room,
     String username, String password) async {
   final response = await http.post(
-    Uri.parse('http://localhost/nlrc_archive_api/update_arbiter_account.php'),
+    Uri.parse('http://$serverIP/nlrc_archive_api/update_arbiter_account.php'),
     body: {
       'arbi_id': arbiId,
       'name': name,
@@ -133,7 +134,7 @@ Future<void> updateArbiter(String arbiId, String name, String room,
 }
 
 Future<List<Map<String, dynamic>>> fetchRequestedDocuments() async {
-  var url = "http://localhost/nlrc_archive_api/fetch_request.php";
+  var url = "http://$serverIP/nlrc_archive_api/fetch_request.php";
 
   try {
     var response = await http.get(Uri.parse(url));
@@ -168,7 +169,7 @@ Future<List<Map<String, dynamic>>> fetchRequestedDocuments() async {
 }
 
 Future<List<Map<String, dynamic>>> fetchRetrievedDocuments() async {
-  var url = "http://localhost/nlrc_archive_api/fetch_retrieved_document.php";
+  var url = "http://$serverIP/nlrc_archive_api/fetch_retrieved_document.php";
 
   try {
     var response = await http.get(Uri.parse(url));
@@ -204,7 +205,7 @@ Future<List<Map<String, dynamic>>> fetchRetrievedDocuments() async {
 
 Future<void> updateDocumentStatus(var docId, String newStatus) async {
   docId = int.parse(docId);
-  var url = "http://localhost/nlrc_archive_api/approve_request.php";
+  var url = "http://$serverIP/nlrc_archive_api/approve_request.php";
 
   try {
     var response = await http.post(
@@ -234,7 +235,7 @@ Future<void> updateDocumentStatus(var docId, String newStatus) async {
 //dump codes for adding and deleting user
 /* 
 Future<void> addUser(String username, String password, String arbiter) async {
-  final url = 'http://localhost/nlrc_archive_api/add_users.php';
+  final url = 'http://$serverIP/nlrc_archive_api/add_users.php';
 
   try {
     final response = await http.post(
@@ -258,7 +259,7 @@ Future<void> addUser(String username, String password, String arbiter) async {
 }
 
 Future<List<Map<String, String>>> getUser() async {
-  final url = 'http://localhost/nlrc_archive_api/get_users.php';
+  final url = 'http://$serverIP/nlrc_archive_api/get_users.php';
 
   try {
     final response = await http.get(Uri.parse(url));

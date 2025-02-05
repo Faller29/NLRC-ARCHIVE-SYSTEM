@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:nlrc_archive/data/themeData.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/screens/home_page.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
@@ -27,7 +30,7 @@ class _logInWidgetPage extends State<LoginWidget> {
       return;
     }
 
-    var url = "http://localhost/nlrc_archive_api/loginController/login.php";
+    var url = "http://$serverIP/nlrc_archive_api/loginController/login.php";
     var response = await http.post(Uri.parse(url), body: {
       "username": _usernameController.text.trim(),
       "password": _passwordController.text.trim(),
@@ -65,9 +68,20 @@ class _logInWidgetPage extends State<LoginWidget> {
   }
 
   @override
+  void initState() {
+    Future.delayed(Duration.zero, () {
+      if (serverIP == "0") {
+        showConnectionErrorDialog();
+      }
+    });
+    super.initState();
+  }
+
+  @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+
     super.dispose();
   }
 
@@ -163,6 +177,34 @@ class _logInWidgetPage extends State<LoginWidget> {
           ),
         ),
       ),
+    );
+  }
+
+  // Show connection error dialog
+  void showConnectionErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Connection Error"),
+          content: Text(
+              "Connection to the Local server failed.\nPlease contact your IT to reestablish the connection."),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                setState(() {});
+              },
+              child: Text("Retry"),
+            ),
+            TextButton(
+              onPressed: () => exit(0),
+              child: Text("Exit"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:nlrc_archive/data/themeData.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/modals/sack_content.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
 import 'package:http/http.dart' as http;
@@ -29,7 +30,7 @@ class _ArchivePageState extends State<ArchivePage> {
   }
 
   Future<void> fetch_created_sack() async {
-    var url = "http://localhost/nlrc_archive_api/retrieve_sack.php";
+    var url = "http://$serverIP/nlrc_archive_api/retrieve_sack.php";
     try {
       var response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -57,7 +58,7 @@ class _ArchivePageState extends State<ArchivePage> {
       return;
     }
 
-    var url = "http://localhost/nlrc_archive_api/add_sack.php";
+    var url = "http://$serverIP/nlrc_archive_api/add_sack.php";
     var response = await http.post(Uri.parse(url), body: {
       "sack_name": _sackId.text,
     });
@@ -83,7 +84,7 @@ class _ArchivePageState extends State<ArchivePage> {
   }
 
   Future<void> deleteSack(String sackId, int index) async {
-    var url = "http://localhost/nlrc_archive_api/delete_sack.php";
+    var url = "http://$serverIP/nlrc_archive_api/delete_sack.php";
     try {
       var response = await http.post(
         Uri.parse(url),

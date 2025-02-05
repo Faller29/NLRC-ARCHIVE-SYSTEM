@@ -25,10 +25,16 @@ class _SettingsPageState extends State<SettingsPage> {
   TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _retrievedDocuments = [];
   List<Map<String, dynamic>> _filteredDocuments = [];
+
   @override
   void initState() {
     _fetchDocuments();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _fetchDocuments() async {
@@ -56,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> deleteArbiter(String arbiId) async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost/nlrc_archive_api/delete_arbiter.php'),
+        Uri.parse('http://$serverIP/nlrc_archive_api/delete_arbiter.php'),
         body: {'arbi_id': arbiId},
       );
 
@@ -76,7 +82,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> deleteAccount(String accountId) async {
-    final url = 'http://localhost/nlrc_archive_api/delete_user.php';
+    final url = 'http://$serverIP/nlrc_archive_api/delete_user.php';
     try {
       final response = await http.post(Uri.parse(url), body: {
         'acc_id': accountId,
@@ -102,7 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> editAccount(String accountId, String username, String password,
       String? arbiId) async {
-    final url = 'http://localhost/nlrc_archive_api/edit_account.php';
+    final url = 'http://$serverIP/nlrc_archive_api/edit_account.php';
     try {
       final response = await http.post(Uri.parse(url), body: {
         'acc_id': accountId,
@@ -132,7 +138,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> addAccount(
       String username, String password, String? arbiterId) async {
-    final url = 'http://localhost/nlrc_archive_api/add_account.php';
+    final url = 'http://$serverIP/nlrc_archive_api/add_account.php';
 
     String arbiIdToSend = arbiterId == null ? 'NULL' : arbiterId;
 

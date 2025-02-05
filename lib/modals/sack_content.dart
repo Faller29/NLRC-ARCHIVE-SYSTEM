@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nlrc_archive/data/themeData.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/modals/add_document.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -7,8 +8,10 @@ import 'dart:convert';
 class SackContent extends StatefulWidget {
   final String sackId;
   final String sackName;
+  final String? pending;
 
-  const SackContent({Key? key, required this.sackId, required this.sackName})
+  const SackContent(
+      {Key? key, required this.sackId, required this.sackName, this.pending})
       : super(key: key);
 
   @override
@@ -28,7 +31,7 @@ class _SackContentState extends State<SackContent> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost/nlrc_archive_api/retrieve_document.php?sack_id=$sackId'),
+            'http://$serverIP/nlrc_archive_api/retrieve_document.php?sack_id=$sackId'),
       );
 
       if (response.statusCode == 200) {
@@ -52,7 +55,7 @@ class _SackContentState extends State<SackContent> {
     print(docId);
     try {
       final response = await http.post(
-        Uri.parse('http://localhost/nlrc_archive_api/delete_document.php'),
+        Uri.parse('http://$serverIP/nlrc_archive_api/delete_document.php'),
         body: {'doc_id': docId},
       );
       final data = jsonDecode(response.body);
@@ -145,7 +148,7 @@ class _SackContentState extends State<SackContent> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -192,11 +195,13 @@ class _SackContentState extends State<SackContent> {
                           ),
                         ],
                       ),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed: () =>
-                            showDeleteConfirmation(doc['doc_id'] ?? ''),
-                      ),
+                      trailing: widget.pending != 'pending'
+                          ? IconButton(
+                              icon: Icon(Icons.delete, color: Colors.redAccent),
+                              onPressed: () =>
+                                  showDeleteConfirmation(doc['doc_id'] ?? ''),
+                            )
+                          : null,
                     ),
                   );
                 },
@@ -215,24 +220,25 @@ class _SackContentState extends State<SackContent> {
           onPressed: () => Navigator.pop(context),
           child: Text('Close'),
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green, foregroundColor: Colors.white),
-          onPressed: () => showDialog(
-            context: context,
-            builder: (context) {
-              return AddDocument(
-                sackId: widget.sackId,
-                onDocumentAdded: () {
-                  setState(() {
-                    futureDocuments = fetchDocuments(widget.sackId);
-                  });
-                },
-              );
-            },
+        if (widget.pending != 'pending')
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green, foregroundColor: Colors.white),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) {
+                return AddDocument(
+                  sackId: widget.sackId,
+                  onDocumentAdded: () {
+                    setState(() {
+                      futureDocuments = fetchDocuments(widget.sackId);
+                    });
+                  },
+                );
+              },
+            ),
+            child: Text('Add Case'),
           ),
-          child: Text('Add Case'),
-        ),
       ],
       actionsAlignment: MainAxisAlignment.spaceAround,
     );

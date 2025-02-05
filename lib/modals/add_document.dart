@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
 import 'package:nlrc_archive/widgets/login_widget.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
@@ -47,7 +48,7 @@ class _AddDocumentState extends State<AddDocument> {
       };
       try {
         final response = await http.post(
-          Uri.parse('http://localhost/nlrc_archive_api/add_document.php'),
+          Uri.parse('http://$serverIP/nlrc_archive_api/add_document.php'),
           body: data,
         );
 
