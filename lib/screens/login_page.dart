@@ -41,6 +41,18 @@ class _IndexPageState extends State<IndexPage> {
             ),
           ),
         ),
+        Positioned(
+          bottom: 5,
+          left: 10,
+          child: Text(
+            "Credits: John Peter Faller & Renzy Gutierrez",
+            style: TextStyle(
+              color: Colors.white30,
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
         Center(
           child: LoginWidget(),
         ),

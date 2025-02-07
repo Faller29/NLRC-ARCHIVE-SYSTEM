@@ -518,25 +518,31 @@ class _HomePageState extends State<HomePage> {
       if (!isFetching) {
         fetchDocuments(query, user).then((data) {
           if (!listsAreEqual(documents, data)) {
-            setState(() {
-              documents = data;
-            });
+            if (mounted) {
+              setState(() {
+                documents = data;
+              });
+            }
           }
         });
 
         fetchCreatedSack().then((data) {
           if (!listsAreEqual(sackCreatedList, data)) {
-            setState(() {
-              sackCreatedList = data;
-            });
+            if (mounted) {
+              setState(() {
+                sackCreatedList = data;
+              });
+            }
           }
         });
 
         fetchPendingSack().then((data) {
           if (!listsAreEqual(sackPendingList, data)) {
-            setState(() {
-              sackPendingList = data;
-            });
+            if (mounted) {
+              setState(() {
+                sackPendingList = data;
+              });
+            }
           }
         });
       }
@@ -1050,120 +1056,117 @@ class _HomePageState extends State<HomePage> {
                                                       ],
                                                     ),
                                                     Divider(),
-                                                    Align(
-                                                      alignment:
-                                                          Alignment.centerRight,
-                                                      child: ElevatedButton(
-                                                        style: ElevatedButton
-                                                            .styleFrom(
-                                                                backgroundColor:
-                                                                    Colors
-                                                                        .green,
-                                                                foregroundColor:
-                                                                    Colors
-                                                                        .white),
-                                                        onPressed: () {
-                                                          showDialog(
-                                                            context: context,
-                                                            builder: (context) {
-                                                              return AlertDialog(
-                                                                title: Text(
-                                                                  '$docName',
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          18,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold),
-                                                                ),
-                                                                content: Column(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
-                                                                  children: [
-                                                                    Text(
-                                                                      'Request archive for retrieval',
-                                                                      style:
-                                                                          TextStyle(
+                                                    if (docStatus == "Stored")
+                                                      Align(
+                                                        alignment: Alignment
+                                                            .centerRight,
+                                                        child: ElevatedButton(
+                                                          style: ElevatedButton
+                                                              .styleFrom(
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .green,
+                                                                  foregroundColor:
+                                                                      Colors
+                                                                          .white),
+                                                          onPressed: () {
+                                                            showDialog(
+                                                              context: context,
+                                                              builder:
+                                                                  (context) {
+                                                                return AlertDialog(
+                                                                  title: Text(
+                                                                    '$docName',
+                                                                    style: TextStyle(
                                                                         fontSize:
-                                                                            14,
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                actions: [
-                                                                  ElevatedButton(
-                                                                    style: ElevatedButton.styleFrom(
-                                                                        backgroundColor:
-                                                                            Colors
-                                                                                .red,
-                                                                        foregroundColor:
-                                                                            Colors.white),
-                                                                    onPressed: () =>
-                                                                        Navigator.pop(
-                                                                            context),
-                                                                    child: Text(
-                                                                        'Cancel'),
+                                                                            18,
+                                                                        fontWeight:
+                                                                            FontWeight.bold),
                                                                   ),
-                                                                  ElevatedButton(
-                                                                    style: ElevatedButton.styleFrom(
-                                                                        backgroundColor:
-                                                                            Colors
-                                                                                .green,
-                                                                        foregroundColor:
-                                                                            Colors.white),
-                                                                    onPressed:
-                                                                        () async {
-                                                                      if (docStatus ==
-                                                                          'Stored') {
-                                                                        bool success = await requestRetrieval(
-                                                                            docId,
-                                                                            accountId);
+                                                                  content:
+                                                                      Column(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .min,
+                                                                    children: [
+                                                                      Text(
+                                                                        'Request archive for retrieval',
+                                                                        style:
+                                                                            TextStyle(
+                                                                          fontSize:
+                                                                              14,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  actions: [
+                                                                    ElevatedButton(
+                                                                      style: ElevatedButton.styleFrom(
+                                                                          backgroundColor: Colors
+                                                                              .red,
+                                                                          foregroundColor:
+                                                                              Colors.white),
+                                                                      onPressed:
+                                                                          () =>
+                                                                              Navigator.pop(context),
+                                                                      child: Text(
+                                                                          'Cancel'),
+                                                                    ),
+                                                                    ElevatedButton(
+                                                                      style: ElevatedButton.styleFrom(
+                                                                          backgroundColor: Colors
+                                                                              .green,
+                                                                          foregroundColor:
+                                                                              Colors.white),
+                                                                      onPressed:
+                                                                          () async {
+                                                                        if (docStatus ==
+                                                                            'Stored') {
+                                                                          bool success = await requestRetrieval(
+                                                                              docId,
+                                                                              accountId);
 
-                                                                        if (success) {
-                                                                          setState(
-                                                                              () {});
-                                                                          ScaffoldMessenger.of(context)
-                                                                              .showSnackBar(
-                                                                            snackBarSuccess(
-                                                                              'Retrieval request sent!',
-                                                                              context,
-                                                                            ),
-                                                                          );
+                                                                          if (success) {
+                                                                            setState(() {});
+                                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                                              snackBarSuccess(
+                                                                                'Retrieval request sent!',
+                                                                                context,
+                                                                              ),
+                                                                            );
+                                                                          } else {
+                                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                                              snackBarFailed('Failed to request retrieval', context),
+                                                                            );
+                                                                          }
                                                                         } else {
                                                                           ScaffoldMessenger.of(context)
                                                                               .showSnackBar(
-                                                                            snackBarFailed('Failed to request retrieval',
-                                                                                context),
+                                                                            snackBarFailed(
+                                                                              'Case not in Archive',
+                                                                              context,
+                                                                            ),
                                                                           );
                                                                         }
-                                                                      } else {
-                                                                        ScaffoldMessenger.of(context)
-                                                                            .showSnackBar(
-                                                                          snackBarFailed(
-                                                                            'Case not in Archive',
-                                                                            context,
-                                                                          ),
-                                                                        );
-                                                                      }
 
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                    child: Text(
-                                                                        'Confirm'),
-                                                                  ),
-                                                                ],
-                                                                actionsAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceBetween,
-                                                              );
-                                                            },
-                                                          );
-                                                        },
-                                                        child: Text('Request'),
-                                                      ),
-                                                    )
+                                                                        Navigator.pop(
+                                                                            context);
+                                                                      },
+                                                                      child: Text(
+                                                                          'Confirm'),
+                                                                    ),
+                                                                  ],
+                                                                  actionsAlignment:
+                                                                      MainAxisAlignment
+                                                                          .spaceBetween,
+                                                                );
+                                                              },
+                                                            );
+                                                          },
+                                                          child:
+                                                              Text('Request'),
+                                                        ),
+                                                      )
                                                   ],
                                                 ),
                                               ),

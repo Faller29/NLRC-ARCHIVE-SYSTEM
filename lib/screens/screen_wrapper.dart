@@ -86,9 +86,11 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
       if (!isFetching) {
         fetchRequestedDocuments().then((data) {
           if (!listsAreEqual(requestedDocument, data)) {
-            setState(() {
-              requestedDocument = data;
-            });
+            if (mounted) {
+              setState(() {
+                requestedDocument = data;
+              });
+            }
           }
         });
       }

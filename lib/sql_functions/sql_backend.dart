@@ -12,7 +12,6 @@ Future<void> fetchArbitersList() async {
 
 Future<void> fetchAccounts() async {
   accounts = await getAccounts();
-  print(fetchedAccounts);
 }
 
 Future<bool> addArbiter(String name, String room) async {
