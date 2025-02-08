@@ -11,6 +11,7 @@ import 'package:nlrc_archive/screens/screen_wrapper.dart';
 import 'package:nlrc_archive/sql_functions/sql_backend.dart';
 import 'package:nlrc_archive/sql_functions/sql_homepage.dart';
 import 'package:nlrc_archive/widgets/disposed_documents_widget.dart';
+import 'package:nlrc_archive/widgets/sacked_documents.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -339,6 +340,25 @@ class _HomePageState extends State<HomePage> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(),
+                                SizedBox(width: 20),
+                                Text("Uploading Excel File, Please wait..."),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
                     _uploadFileAnyway(setState);
                     if (user == null) {
                       setState(() {
@@ -350,7 +370,6 @@ class _HomePageState extends State<HomePage> {
                       _selectedFileName = null;
                       _selectedFilePath = null;
                     }
-                    Navigator.pop(context);
                   },
                   child: Text("OK"),
                 ),
@@ -359,6 +378,7 @@ class _HomePageState extends State<HomePage> {
           },
         );
       } else if (jsonResponse['status'] == 'success') {
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           snackBarSuccess('File has been saved', context),
         );
@@ -407,6 +427,9 @@ class _HomePageState extends State<HomePage> {
       var jsonResponse = jsonDecode(responseBody);
 
       if (jsonResponse['status'] == 'success') {
+        Navigator.pop(context);
+        Navigator.pop(context);
+
         ScaffoldMessenger.of(context).showSnackBar(
           snackBarSuccess('File has been saved', context),
         );
@@ -746,29 +769,25 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
                         children: [
-                          Stack(
-                            children: [
-                              Center(
-                                child: SizedBox(
-                                  width: MediaQuery.sizeOf(context).width / 2 -
-                                      100,
-                                  child: Center(
-                                    child: Text(
-                                      'Find Document',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                          SizedBox(
+                            width: MediaQuery.sizeOf(context).width / 2 - 100,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Center(
+                                  child: Text(
+                                    'Find Document',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(
-                                width:
-                                    MediaQuery.sizeOf(context).width / 2 - 100,
-                                child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: ElevatedButton(
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    ElevatedButton(
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: const Color.fromARGB(
                                               255, 51, 38, 165),
@@ -780,9 +799,29 @@ class _HomePageState extends State<HomePage> {
                                                 return DocumentDialog();
                                               },
                                             ),
-                                        child: Text('Disposed'))),
-                              )
-                            ],
+                                        child: Text('Disposed')),
+                                    SizedBox(
+                                      width: 20,
+                                    ),
+                                    ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(
+                                              255, 51, 38, 165),
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () => showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return SackedDocumentsDialog(
+                                                  user: user,
+                                                );
+                                              },
+                                            ),
+                                        child: Text('Sack')),
+                                  ],
+                                )
+                              ],
+                            ),
                           ),
                           SizedBox(height: 20),
                           Padding(
@@ -1283,19 +1322,19 @@ class _HomePageState extends State<HomePage> {
                                                                               () async {
                                                                             bool
                                                                                 success =
-                                                                                await disposeDocument(docId, accountId);
+                                                                                await disposeDocument(docId);
 
                                                                             if (success) {
                                                                               setState(() {});
                                                                               ScaffoldMessenger.of(context).showSnackBar(
                                                                                 snackBarSuccess(
-                                                                                  'Retrieval request sent!',
+                                                                                  'Document disposed successfully!',
                                                                                   context,
                                                                                 ),
                                                                               );
                                                                             } else {
                                                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                                                snackBarFailed('Failed to request retrieval', context),
+                                                                                snackBarFailed('Failed to dispose document', context),
                                                                               );
                                                                             }
                                                                             Navigator.pop(context);

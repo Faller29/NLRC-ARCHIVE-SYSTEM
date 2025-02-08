@@ -117,13 +117,34 @@ Future<bool> requestRetrieval(var docId, var accountId) async {
   }
 }
 
-Future<bool> disposeDocument(var docId, var accountId) async {
+Future<bool> disposeDocument(var docId) async {
   try {
     String docIdStr = docId.toString();
 
     final response = await http.post(
       Uri.parse('http://$serverIP/nlrc_archive_api/dispose_document.php'),
-      body: {'doc_id': docIdStr, "acc_id": accountId},
+      body: {'doc_id': docIdStr},
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (data['status'] == 'success') {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    return false;
+  }
+}
+
+Future<bool> disposeSack(var sackId) async {
+  try {
+    String docIdStr = sackId.toString();
+
+    final response = await http.post(
+      Uri.parse('http://$serverIP/nlrc_archive_api/dispose_sack.php'),
+      body: {'sack_id': docIdStr},
     );
 
     final data = jsonDecode(response.body);

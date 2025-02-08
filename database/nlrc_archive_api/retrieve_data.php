@@ -7,6 +7,8 @@ $con = dbconnection();
 
 $query = isset($_GET['Query']) ? $_GET['Query'] : ''; 
 $user = isset($_GET['User']) ? $_GET['User'] : null; // Add user parameter
+$arbi = isset($_GET['arbi']) ? $_GET['arbi'] : null; // Add user parameter
+
 
 $sql = "SELECT 
             s.sack_id, 
@@ -29,13 +31,22 @@ if ($user != null) {
     $sql .= " AND s.arbiter_number = '$user'";
 }
 
-if ($query != '') {
+ if ($query != '') {
     $escapedQuery = mysqli_real_escape_string($con, $query);
     $sql .= " AND (
         d.doc_number LIKE '%$escapedQuery%' 
         OR d.doc_complainant LIKE '%$escapedQuery%' 
         OR d.doc_respondent LIKE '%$escapedQuery%'
+        OR s.sack_name LIKE '%$escapedQuery%'
+
     )";
+} 
+
+if ($arbi != null && $user == null) {
+    $escapedQuery = mysqli_real_escape_string($con, $query);
+    $escapedArbi = mysqli_real_escape_string($con, $arbi);
+
+    $sql .= " AND s.arbiter_number LIKE '%$escapedArbi%'";
 }
 
 $result = mysqli_query($con, $sql);
