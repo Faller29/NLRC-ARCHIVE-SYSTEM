@@ -568,14 +568,14 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                                 size: 16, color: Colors.grey[600]),
                             const SizedBox(width: 6.0),
                             Text(
-                              'Verdict: ',
+                              'Decision: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.grey[800],
                               ),
                             ),
                             Text(
-                                "${doc['verdict'].toString().isEmpty ? "No verdict" : doc['verdict']}"),
+                                "${doc['verdict'].toString().isEmpty ? "No Decision" : doc['verdict']}"),
                           ],
                         ),
                         Row(

@@ -6,7 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $sack_id = $_POST['sack_id'] ?? null;
     $doc_number = $_POST['doc_number'] ?? null;
-    $doc_respondent = $_POST['doc_repondent'] ?? null;
+    $doc_respondent = $_POST['doc_respondent'] ?? null;
     $doc_complainant = $_POST['doc_complainant'] ?? null;
     $doc_verdict = $_POST['doc_verdict'] ?? null;
     $doc_status = $_POST['status'] ?? null;

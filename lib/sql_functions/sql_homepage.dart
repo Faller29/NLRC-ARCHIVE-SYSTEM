@@ -44,11 +44,11 @@ Future<List<Map<String, dynamic>>> fetchDocuments(
             'doc_id': int.tryParse(item['doc_id'].toString()) ?? 0,
             'doc_complainant': item['doc_complainant'] ?? '',
             'doc_respondent': item['doc_respondent'] ?? '',
-            'doc_name': item['doc_number'] ?? '',
+            'doc_number': item['doc_number'] ?? '',
             'status': item['doc_status'] ?? '',
             'verdict': item['verdict'] ?? '',
             'version': item['version'] ?? '',
-            'volume': item['volume'] ?? '',
+            'doc_volume': item['volume'] ?? '',
             'arbi_name': item['arbiter_number'] ?? '',
           };
         }),
@@ -114,5 +114,66 @@ Future<bool> requestRetrieval(var docId, var accountId) async {
     }
   } catch (e) {
     return false;
+  }
+}
+
+Future<bool> disposeDocument(var docId, var accountId) async {
+  try {
+    String docIdStr = docId.toString();
+
+    final response = await http.post(
+      Uri.parse('http://$serverIP/nlrc_archive_api/dispose_document.php'),
+      body: {'doc_id': docIdStr, "acc_id": accountId},
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (data['status'] == 'success') {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    return false;
+  }
+}
+
+Future<List<Map<String, dynamic>>> fetchDisposedDocuments(
+    String query, String? user) async {
+  var url = "http://$serverIP/nlrc_archive_api/retrieve_disposed_data.php";
+
+  final uri = Uri.parse(url).replace(queryParameters: {
+    'Query': query,
+    'User': user ??
+        '', // Pass user parameter (null will be sent as an empty string)
+  });
+
+  try {
+    var response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(
+        data.map((item) {
+          return {
+            'sack_id': int.tryParse(item['sack_id'].toString()) ?? 0,
+            'sack_name': item['sack_name'] ?? '',
+            'doc_id': int.tryParse(item['doc_id'].toString()) ?? 0,
+            'doc_complainant': item['doc_complainant'] ?? '',
+            'doc_respondent': item['doc_respondent'] ?? '',
+            'doc_number': item['doc_number'] ?? '',
+            'status': item['doc_status'] ?? '',
+            'verdict': item['verdict'] ?? '',
+            'version': item['version'] ?? '',
+            'doc_volume': item['volume'] ?? '',
+            'arbi_name': item['arbiter_number'] ?? '',
+          };
+        }),
+      );
+    } else {
+      throw Exception('Failed to load documents');
+    }
+  } catch (e) {
+    throw Exception('Failed to load documents');
   }
 }

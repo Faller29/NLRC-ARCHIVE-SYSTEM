@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:nlrc_archive/main.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
@@ -9,24 +8,26 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
-class AddDocument extends StatefulWidget {
+class AddEditDocument extends StatefulWidget {
   final String sackId;
-  final VoidCallback onDocumentAdded; // Callback to notify parent
+  final VoidCallback onDocumentUpdated;
+  final Map<String, dynamic>? document;
 
-  const AddDocument({
+  const AddEditDocument({
     Key? key,
     required this.sackId,
-    required this.onDocumentAdded,
+    required this.onDocumentUpdated,
+    this.document,
   }) : super(key: key);
 
   @override
-  State<AddDocument> createState() => _AddDocumentState();
+  State<AddEditDocument> createState() => _AddEditDocumentState();
 }
 
-class _AddDocumentState extends State<AddDocument> {
+class _AddEditDocumentState extends State<AddEditDocument> {
   final TextEditingController _documentNumberController =
       TextEditingController();
-  final TextEditingController _comlainantController = TextEditingController();
+  final TextEditingController _complainantController = TextEditingController();
   final TextEditingController _respondentController = TextEditingController();
   final TextEditingController _documentVerdictController =
       TextEditingController();
@@ -34,13 +35,80 @@ class _AddDocumentState extends State<AddDocument> {
       TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  void addDocument(BuildContext context) async {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.document != null) {
+      _documentNumberController.text =
+          widget.document!['doc_number']?.replaceFirst("RAB-IV-", "") ?? '';
+      _complainantController.text = widget.document!['doc_complainant'] ?? '';
+      _respondentController.text = widget.document!['doc_respondent'] ?? '';
+      _documentVerdictController.text = widget.document!['verdict'] ?? '';
+      _documentVolumeController.text = widget.document!['doc_volume'] ?? '';
+    }
+  }
+
+  void saveDocument(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final data = {
+      'sack_id': widget.sackId,
+      'doc_number': "RAB-IV-${_documentNumberController.text.trim()}",
+      'doc_respondent': _respondentController.text.trim(),
+      'doc_complainant': _complainantController.text.trim(),
+      'doc_verdict': _documentVerdictController.text.trim(),
+      'status': 'Stored',
+      'doc_version': user == null ? 'old' : 'new',
+      'doc_volume': _documentVolumeController.text.trim(),
+    };
+    print(widget.document!['doc_id']);
+    print(widget.sackId);
+    print("nm${_documentNumberController.text}");
+
+    print("vol${_documentVolumeController.text}");
+    print("ver${_documentVerdictController.text}");
+    print("respo${_respondentController.text}");
+    print("Complainant${_complainantController.text}");
+
+    try {
+      final response = await http.post(
+        Uri.parse(widget.document == null
+            ? 'http://$serverIP/nlrc_archive_api/add_document.php'
+            : 'http://$serverIP/nlrc_archive_api/edit_document.php'),
+        body: widget.document == null
+            ? data
+            : {...data, 'doc_id': widget.document!['doc_id']},
+      );
+
+      final responseData = jsonDecode(response.body);
+      if (response.statusCode == 200 && responseData['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(widget.document == null
+                  ? 'Added Successfully'
+                  : 'Updated Successfully')),
+        );
+        widget.onDocumentUpdated();
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${responseData['message']}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
+
+  /* void addDocument(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       final data = {
         'sack_id': widget.sackId,
         'doc_number': "RAB-IV-${_documentNumberController.text.trim()}",
         'doc_repondent': _respondentController.text.trim(),
-        'doc_complainant': _comlainantController.text.trim(),
+        'doc_complainant': _complainantController.text.trim(),
         'doc_verdict': _documentVerdictController.text.trim(),
         'status': 'Stored',
         'doc_version': user == null ? 'old' : 'new',
@@ -75,13 +143,13 @@ class _AddDocumentState extends State<AddDocument> {
         );
       }
     }
-  }
+  } */
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        'Add Case',
+        'Add Document',
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -112,7 +180,7 @@ class _AddDocumentState extends State<AddDocument> {
                       padding:
                           EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       child: Text(
-                        "RAB-IV-: ",
+                        "RAB-IV- ",
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w500),
                       ),
@@ -127,11 +195,11 @@ class _AddDocumentState extends State<AddDocument> {
                     }
                     return null;
                   },
-                  onFieldSubmitted: (_) => addDocument(context),
+                  onFieldSubmitted: (_) => saveDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 TextFieldBoxWidget(
-                  controller: _comlainantController,
+                  controller: _complainantController,
                   hint: "Enter Complainant Name",
                   labelText: 'Complainant',
                   validator: (value) {
@@ -141,7 +209,7 @@ class _AddDocumentState extends State<AddDocument> {
 
                     return null;
                   },
-                  onFieldSubmitted: (_) => addDocument(context),
+                  onFieldSubmitted: (_) => saveDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 Text(
@@ -162,21 +230,21 @@ class _AddDocumentState extends State<AddDocument> {
 
                     return null;
                   },
-                  onFieldSubmitted: (_) => addDocument(context),
+                  onFieldSubmitted: (_) => saveDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 TextFieldBoxWidget(
                   controller: _documentVolumeController,
                   labelText: 'Volume (Optional)',
                   hint: 'Enter Volume',
-                  onFieldSubmitted: (_) => addDocument(context),
+                  onFieldSubmitted: (_) => saveDocument(context),
                 ),
                 const SizedBox(height: 16.0),
                 TextFieldBoxWidget(
                   controller: _documentVerdictController,
-                  labelText: 'Verdict (Optional)',
+                  labelText: 'Latest Decision (Optional)',
                   hint: "Enter Verdict",
-                  onFieldSubmitted: (_) => addDocument(context),
+                  onFieldSubmitted: (_) => saveDocument(context),
                 )
               ],
             ),
@@ -194,7 +262,7 @@ class _AddDocumentState extends State<AddDocument> {
           style: ElevatedButton.styleFrom(
               backgroundColor: Colors.greenAccent,
               foregroundColor: Colors.black),
-          onPressed: () => addDocument(context),
+          onPressed: () => saveDocument(context),
           child: Text('Submit'),
         ),
       ],

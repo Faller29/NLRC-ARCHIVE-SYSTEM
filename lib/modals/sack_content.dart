@@ -143,6 +143,8 @@ class _SackContentState extends State<SackContent> {
                     elevation: 3,
                     margin: EdgeInsets.symmetric(vertical: 8),
                     child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       title: Text(
                         doc['doc_number'] ?? 'No Document Number',
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -158,37 +160,34 @@ class _SackContentState extends State<SackContent> {
                                 Text(
                                   doc['doc_complainant'] ?? 'No complaint',
                                   style: TextStyle(fontSize: 14),
+                                  textAlign: TextAlign.center,
                                 ),
-                                SizedBox(
-                                  width: 10,
-                                ),
+                                SizedBox(height: 4),
                                 Text(
                                   'VERSUS',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                                      fontWeight: FontWeight.bold,
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 12),
                                 ),
-                                SizedBox(
-                                  width: 10,
-                                ),
+                                SizedBox(height: 4),
                                 Text(
                                   doc['doc_respondent'] ?? 'No respondent',
                                   style: TextStyle(fontSize: 14),
+                                  textAlign: TextAlign.center,
                                 ),
                               ],
                             ),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                'Verdict: ${doc['verdict']!.isEmpty ? 'No Verdict' : doc['verdict']}',
+                                'Verdict: ${doc['verdict']!.isEmpty ? 'No Decision' : doc['verdict']}',
                                 style: TextStyle(color: Colors.grey),
                               ),
                               Text(
-                                'Volume: ${doc['doc_volume'] ?? 'No volume'}',
+                                'Volume: ${doc['doc_volume']!.isEmpty ? 'No volume' : doc['doc_volume']}',
                                 style: TextStyle(color: Colors.grey),
                               ),
                             ],
@@ -196,10 +195,40 @@ class _SackContentState extends State<SackContent> {
                         ],
                       ),
                       trailing: widget.pending != 'pending'
-                          ? IconButton(
-                              icon: Icon(Icons.delete, color: Colors.redAccent),
-                              onPressed: () =>
-                                  showDeleteConfirmation(doc['doc_id'] ?? ''),
+                          ? SizedBox(
+                              width:
+                                  80, // Prevents overflowing by limiting width
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit,
+                                        color: Colors.blueAccent),
+                                    onPressed: () => showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AddEditDocument(
+                                          sackId: widget.sackId,
+                                          onDocumentUpdated: () {
+                                            setState(() {
+                                              futureDocuments =
+                                                  fetchDocuments(widget.sackId);
+                                            });
+                                          },
+                                          document: doc,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete,
+                                        color: Colors.redAccent),
+                                    onPressed: () => showDeleteConfirmation(
+                                        doc['doc_id'] ?? ''),
+                                  ),
+                                ],
+                              ),
                             )
                           : null,
                     ),
@@ -227,9 +256,9 @@ class _SackContentState extends State<SackContent> {
             onPressed: () => showDialog(
               context: context,
               builder: (context) {
-                return AddDocument(
+                return AddEditDocument(
                   sackId: widget.sackId,
-                  onDocumentAdded: () {
+                  onDocumentUpdated: () {
                     setState(() {
                       futureDocuments = fetchDocuments(widget.sackId);
                     });
@@ -237,7 +266,7 @@ class _SackContentState extends State<SackContent> {
                 );
               },
             ),
-            child: Text('Add Case'),
+            child: Text('Add Document'),
           ),
       ],
       actionsAlignment: MainAxisAlignment.spaceAround,

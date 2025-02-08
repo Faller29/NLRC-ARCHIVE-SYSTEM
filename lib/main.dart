@@ -11,9 +11,13 @@ import 'package:flutter/services.dart';
 
 List<Map<String, dynamic>> previousDocuments = [];
 List<Map<String, dynamic>> documents = [];
+List<Map<String, dynamic>> disposeDocuments = [];
+
 List<dynamic> sackCreatedList = [];
 List<dynamic> sackPendingList = [];
 String query = '';
+String disposeQuery = '';
+
 List<dynamic> requestedDocument = [];
 String serverIP = '';
 Future<void> main() async {

@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $arbiterNumber = $_POST['arbiter_number'];
         $accountId = (int) $_POST['account_id'];
         $doc_version = $_POST['doc_version'] ?? null;
-        $sack_status = 'Pending';
+        $sack_status = 'Creating';
 
         // Handle file upload and read Excel file
         $fileTmpPath = $_FILES['file']['tmp_name'];

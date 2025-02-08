@@ -22,7 +22,7 @@ $sql = "SELECT
             d.doc_number
         FROM tbl_document d
         JOIN tbl_sack s ON s.sack_id = d.sack_id
-        WHERE s.status = 'Stored' AND d.status != 'Disposed'";
+        WHERE s.status = 'Stored' AND d.status = 'Disposed'";
 
 // Modify query based on user
 if ($user != null) {

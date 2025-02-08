@@ -5,10 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:nlrc_archive/data/themeData.dart';
 import 'package:nlrc_archive/main.dart';
+import 'package:nlrc_archive/modals/add_document.dart';
 import 'package:nlrc_archive/modals/sack_content.dart';
 import 'package:nlrc_archive/screens/screen_wrapper.dart';
 import 'package:nlrc_archive/sql_functions/sql_backend.dart';
 import 'package:nlrc_archive/sql_functions/sql_homepage.dart';
+import 'package:nlrc_archive/widgets/disposed_documents_widget.dart';
 import 'package:nlrc_archive/widgets/text_field_widget.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -32,9 +34,13 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _sackId = TextEditingController();
   TextEditingController rejectReason = TextEditingController();
   TextEditingController search = TextEditingController();
+  TextEditingController disposeSearch = TextEditingController();
 
   int currentPage = 0;
   final int pageSize = 5;
+
+  int currentDisposePage = 0;
+  final int disposePageSize = 5;
   List<dynamic> _arbiterChoices = [];
   //List<Map<String, dynamic>> documents = [];
   late Timer _timer;
@@ -53,6 +59,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _timer.cancel();
     query = '';
+    disposeQuery = '';
     super.dispose();
   }
 
@@ -668,12 +675,43 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
                         children: [
-                          Text(
-                            'Find Document',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Stack(
+                            children: [
+                              Center(
+                                child: SizedBox(
+                                  width: MediaQuery.sizeOf(context).width / 2 -
+                                      100,
+                                  child: Center(
+                                    child: Text(
+                                      'Find Document',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width:
+                                    MediaQuery.sizeOf(context).width / 2 - 100,
+                                child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(
+                                              255, 51, 38, 165),
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () => showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return DocumentDialog();
+                                              },
+                                            ),
+                                        child: Text('Disposed'))),
+                              )
+                            ],
                           ),
                           SizedBox(height: 20),
                           Padding(
@@ -770,16 +808,17 @@ class _HomePageState extends State<HomePage> {
                                             final docStatus =
                                                 doc['status'] ?? 'Unknown';
                                             final verdict =
-                                                "${doc['verdict']!.isEmpty ? 'No Verdict' : doc['verdict']}";
+                                                "${doc['verdict']!.isEmpty ? 'No Decision' : doc['verdict']}";
                                             final arbiName = doc['arbi_name'] ??
                                                 'No arbiter';
                                             final docId = doc['doc_id'] ??
                                                 'No document Id';
 
-                                            String docName = doc['doc_name'] ??
-                                                'No document name';
+                                            String docName =
+                                                doc['doc_number'] ??
+                                                    'No document name';
                                             String docVolume =
-                                                "${doc['volume']!.isEmpty ? 'No volume' : doc['volume']}";
+                                                "${doc['doc_volume']!.isEmpty ? 'No volume' : doc['doc_volume']}";
                                             String version =
                                                 "${doc['version']}" ?? 'No';
 
@@ -799,19 +838,41 @@ class _HomePageState extends State<HomePage> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(
-                                                      "Case #: ${docName.toUpperCase()}",
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.grey[800],
-                                                      ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          "Case #: ${docName.toUpperCase()}",
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors
+                                                                .grey[800],
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          "${arbiName.toUpperCase()} - ${sackName.toUpperCase()}",
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color
+                                                                .fromARGB(
+                                                                255, 25, 94, 8),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                     SizedBox(
                                                       height: 10,
                                                     ),
                                                     Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       mainAxisAlignment:
                                                           MainAxisAlignment
                                                               .spaceBetween,
@@ -1027,7 +1088,7 @@ class _HomePageState extends State<HomePage> {
                                                             const SizedBox(
                                                                 width: 6.0),
                                                             Text(
-                                                              'Verdict: ',
+                                                              'Decision: ',
                                                               style: TextStyle(
                                                                 fontWeight:
                                                                     FontWeight
@@ -1056,117 +1117,245 @@ class _HomePageState extends State<HomePage> {
                                                       ],
                                                     ),
                                                     Divider(),
-                                                    if (docStatus == "Stored")
-                                                      Align(
-                                                        alignment: Alignment
-                                                            .centerRight,
-                                                        child: ElevatedButton(
-                                                          style: ElevatedButton
-                                                              .styleFrom(
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            ElevatedButton(
+                                                              style: ElevatedButton.styleFrom(
                                                                   backgroundColor:
                                                                       Colors
                                                                           .green,
                                                                   foregroundColor:
                                                                       Colors
                                                                           .white),
-                                                          onPressed: () {
-                                                            showDialog(
-                                                              context: context,
-                                                              builder:
-                                                                  (context) {
-                                                                return AlertDialog(
-                                                                  title: Text(
-                                                                    '$docName',
-                                                                    style: TextStyle(
-                                                                        fontSize:
-                                                                            18,
-                                                                        fontWeight:
-                                                                            FontWeight.bold),
-                                                                  ),
-                                                                  content:
-                                                                      Column(
-                                                                    mainAxisSize:
-                                                                        MainAxisSize
-                                                                            .min,
-                                                                    children: [
-                                                                      Text(
-                                                                        'Request archive for retrieval',
-                                                                        style:
-                                                                            TextStyle(
-                                                                          fontSize:
-                                                                              14,
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  actions: [
-                                                                    ElevatedButton(
-                                                                      style: ElevatedButton.styleFrom(
-                                                                          backgroundColor: Colors
-                                                                              .red,
-                                                                          foregroundColor:
-                                                                              Colors.white),
-                                                                      onPressed:
-                                                                          () =>
+                                                              onPressed: () =>
+                                                                  showDialog(
+                                                                context:
+                                                                    context,
+                                                                builder:
+                                                                    (context) {
+                                                                  return AddEditDocument(
+                                                                    sackId: doc[
+                                                                            'sack_id']
+                                                                        .toString(),
+                                                                    onDocumentUpdated:
+                                                                        () {
+                                                                      setState(
+                                                                          () {
+                                                                        //ref
+                                                                      });
+                                                                    },
+                                                                    document:
+                                                                        doc,
+                                                                  );
+                                                                },
+                                                              ),
+                                                              child: Text(
+                                                                "Edit",
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                              width: 20,
+                                                            ),
+                                                            if (user == null)
+                                                              ElevatedButton(
+                                                                style: ElevatedButton.styleFrom(
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .red,
+                                                                    foregroundColor:
+                                                                        Colors
+                                                                            .white),
+                                                                onPressed: () =>
+                                                                    showDialog(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      ((context) {
+                                                                    return AlertDialog(
+                                                                      contentPadding: EdgeInsets.symmetric(
+                                                                          vertical:
+                                                                              40,
+                                                                          horizontal:
+                                                                              30),
+                                                                      title: Text(
+                                                                          'Delete ${doc['doc_number']}'),
+                                                                      content: Text(
+                                                                          'Are you sure you want to dispose Document ${doc['doc_number']}?'),
+                                                                      actions: [
+                                                                        ElevatedButton(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
+                                                                            backgroundColor:
+                                                                                Colors.redAccent,
+                                                                            foregroundColor:
+                                                                                Colors.white,
+                                                                          ),
+                                                                          onPressed: () =>
                                                                               Navigator.pop(context),
-                                                                      child: Text(
-                                                                          'Cancel'),
-                                                                    ),
-                                                                    ElevatedButton(
-                                                                      style: ElevatedButton.styleFrom(
-                                                                          backgroundColor: Colors
-                                                                              .green,
-                                                                          foregroundColor:
-                                                                              Colors.white),
-                                                                      onPressed:
-                                                                          () async {
-                                                                        if (docStatus ==
-                                                                            'Stored') {
-                                                                          bool success = await requestRetrieval(
-                                                                              docId,
-                                                                              accountId);
+                                                                          child:
+                                                                              Text('Cancel'),
+                                                                        ),
+                                                                        ElevatedButton(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
+                                                                            backgroundColor:
+                                                                                Colors.green,
+                                                                            foregroundColor:
+                                                                                Colors.white,
+                                                                          ),
+                                                                          onPressed:
+                                                                              () async {
+                                                                            bool
+                                                                                success =
+                                                                                await disposeDocument(docId, accountId);
 
-                                                                          if (success) {
-                                                                            setState(() {});
+                                                                            if (success) {
+                                                                              setState(() {});
+                                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                                snackBarSuccess(
+                                                                                  'Retrieval request sent!',
+                                                                                  context,
+                                                                                ),
+                                                                              );
+                                                                            } else {
+                                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                                snackBarFailed('Failed to request retrieval', context),
+                                                                              );
+                                                                            }
+                                                                            Navigator.pop(context);
+                                                                          },
+                                                                          child:
+                                                                              Text('Confirm'),
+                                                                        ),
+                                                                      ],
+                                                                      actionsAlignment:
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
+                                                                    );
+                                                                  }),
+                                                                ),
+                                                                child: Text(
+                                                                  "Dispose",
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                        if (docStatus ==
+                                                            "Stored")
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                                backgroundColor:
+                                                                    const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        51,
+                                                                        38,
+                                                                        165),
+                                                                foregroundColor:
+                                                                    Colors
+                                                                        .white),
+                                                            onPressed: () {
+                                                              showDialog(
+                                                                context:
+                                                                    context,
+                                                                builder:
+                                                                    (context) {
+                                                                  return AlertDialog(
+                                                                    title: Text(
+                                                                      '$docName',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              18,
+                                                                          fontWeight:
+                                                                              FontWeight.bold),
+                                                                    ),
+                                                                    content:
+                                                                        Column(
+                                                                      mainAxisSize:
+                                                                          MainAxisSize
+                                                                              .min,
+                                                                      children: [
+                                                                        Text(
+                                                                          'Request archive for retrieval',
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                14,
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                    actions: [
+                                                                      ElevatedButton(
+                                                                        style: ElevatedButton.styleFrom(
+                                                                            backgroundColor:
+                                                                                Colors.red,
+                                                                            foregroundColor: Colors.white),
+                                                                        onPressed:
+                                                                            () =>
+                                                                                Navigator.pop(context),
+                                                                        child: Text(
+                                                                            'Cancel'),
+                                                                      ),
+                                                                      ElevatedButton(
+                                                                        style: ElevatedButton.styleFrom(
+                                                                            backgroundColor:
+                                                                                Colors.green,
+                                                                            foregroundColor: Colors.white),
+                                                                        onPressed:
+                                                                            () async {
+                                                                          if (docStatus ==
+                                                                              'Stored') {
+                                                                            bool
+                                                                                success =
+                                                                                await requestRetrieval(docId, accountId);
+
+                                                                            if (success) {
+                                                                              setState(() {});
+                                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                                snackBarSuccess(
+                                                                                  'Retrieval request sent!',
+                                                                                  context,
+                                                                                ),
+                                                                              );
+                                                                            } else {
+                                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                                snackBarFailed('Failed to request retrieval', context),
+                                                                              );
+                                                                            }
+                                                                          } else {
                                                                             ScaffoldMessenger.of(context).showSnackBar(
-                                                                              snackBarSuccess(
-                                                                                'Retrieval request sent!',
+                                                                              snackBarFailed(
+                                                                                'Case not in Archive',
                                                                                 context,
                                                                               ),
                                                                             );
-                                                                          } else {
-                                                                            ScaffoldMessenger.of(context).showSnackBar(
-                                                                              snackBarFailed('Failed to request retrieval', context),
-                                                                            );
                                                                           }
-                                                                        } else {
-                                                                          ScaffoldMessenger.of(context)
-                                                                              .showSnackBar(
-                                                                            snackBarFailed(
-                                                                              'Case not in Archive',
-                                                                              context,
-                                                                            ),
-                                                                          );
-                                                                        }
 
-                                                                        Navigator.pop(
-                                                                            context);
-                                                                      },
-                                                                      child: Text(
-                                                                          'Confirm'),
-                                                                    ),
-                                                                  ],
-                                                                  actionsAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
-                                                                );
-                                                              },
-                                                            );
-                                                          },
-                                                          child:
-                                                              Text('Request'),
-                                                        ),
-                                                      )
+                                                                          Navigator.pop(
+                                                                              context);
+                                                                        },
+                                                                        child: Text(
+                                                                            'Confirm'),
+                                                                      ),
+                                                                    ],
+                                                                    actionsAlignment:
+                                                                        MainAxisAlignment
+                                                                            .spaceBetween,
+                                                                  );
+                                                                },
+                                                              );
+                                                            },
+                                                            child:
+                                                                Text('Request'),
+                                                          ),
+                                                      ],
+                                                    )
                                                   ],
                                                 ),
                                               ),
