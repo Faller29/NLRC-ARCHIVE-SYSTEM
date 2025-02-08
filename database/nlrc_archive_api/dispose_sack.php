@@ -9,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $conn->begin_transaction();
 
-        // Update status of all documents linked to the sack_id
         $sql_update = "UPDATE tbl_document 
                        SET status = 'Disposed' 
                        WHERE sack_id = ? 

@@ -493,7 +493,78 @@ class _HomePageState extends State<HomePage> {
 
     var data = jsonDecode(response.body);
 
-    if (data['status'] == "success") {
+    if (data['status'] == "error" &&
+        data['message'] ==
+            "Sack name already exists for this arbiter. Please choose a different name.") {
+      // Show confirmation dialog to user if the sack exists for this arbiter
+      bool proceed = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Sack Name Exists"),
+            content: Text(
+                "The sack name already exists for this arbiter.\nDo you want to proceed with adding the sack anyway?"),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red, foregroundColor: Colors.white),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: Text(
+                  'Cancel',
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: Text('Proceed'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (proceed) {
+        var responseAgain = await http.post(Uri.parse(url), body: {
+          "sack_name": "Sack ${_sackId.text}",
+          "arbiter_number": _selectedArbiter,
+          "sack_status": 'Creating',
+          "acc_id": accountId,
+          "proceed": 'true',
+        });
+
+        var dataAgain = jsonDecode(responseAgain.body);
+
+        if (dataAgain['status'] == "success") {
+          ScaffoldMessenger.of(context).showSnackBar(
+            snackBarSuccess('Added Sack Successfully', context),
+          );
+          setState(() {
+            sackCreatedList.add({
+              "sack_id": dataAgain['sack_id'].toString(),
+              "sack_name": _sackId.text,
+              "arbiter_number": _selectedArbiter,
+            });
+          });
+          _sackId.clear();
+          if (user == null) {
+            _selectedArbiter = null;
+          }
+          Navigator.pop(context);
+        } else {
+          Navigator.pop(context);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            snackBarFailed('Failed to Add Sack', context),
+          );
+        }
+      }
+    } else if (data['status'] == "success") {
       ScaffoldMessenger.of(context).showSnackBar(
         snackBarSuccess('Added Sack Successfully', context),
       );
@@ -508,12 +579,14 @@ class _HomePageState extends State<HomePage> {
       if (user == null) {
         _selectedArbiter = null;
       }
+      Navigator.pop(context);
     } else {
+      Navigator.pop(context);
+
       ScaffoldMessenger.of(context).showSnackBar(
         snackBarFailed('Failed to Add Sack', context),
       );
     }
-    Navigator.pop(context);
   }
 
   Future<void> deleteSack(String sackId, int index) async {

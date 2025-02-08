@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 $con = dbconnection(); 
 
 $query = isset($_GET['Query']) ? $_GET['Query'] : ''; 
-$user = isset($_GET['User']) ? $_GET['User'] : null; // Add user parameter
+$user = isset($_GET['User']) ? $_GET['User'] : null; 
 
 $sql = "SELECT 
             s.sack_id, 
@@ -24,7 +24,6 @@ $sql = "SELECT
         JOIN tbl_sack s ON s.sack_id = d.sack_id
         WHERE s.status = 'Stored' AND d.status = 'Disposed'";
 
-// Modify query based on user
 if ($user != null) {
     $sql .= " AND s.arbiter_number = '$user'";
 }

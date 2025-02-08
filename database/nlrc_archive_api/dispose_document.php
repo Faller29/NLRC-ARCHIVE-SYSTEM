@@ -9,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $conn->begin_transaction();
 
-        // Update the status of the document to 'Disposed'
         $sql_update = "UPDATE tbl_document 
                        SET status = 'Disposed' 
                        WHERE doc_id = ? 
