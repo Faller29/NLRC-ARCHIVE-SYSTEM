@@ -860,37 +860,49 @@ class _HomePageState extends State<HomePage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color.fromARGB(
-                                              255, 51, 38, 165),
-                                          foregroundColor: Colors.white,
-                                        ),
-                                        onPressed: () => showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return DocumentDialog();
-                                              },
-                                            ),
-                                        child: Text('Disposed')),
+                                    Tooltip(
+                                      message:
+                                          "Click to view disposed documents",
+                                      child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                const Color.fromARGB(
+                                                    255, 51, 38, 165),
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          onPressed: () => showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return DocumentDialog();
+                                                },
+                                              ),
+                                          child: Text('Disposed')),
+                                    ),
                                     SizedBox(
                                       width: 20,
                                     ),
-                                    ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color.fromARGB(
-                                              255, 51, 38, 165),
-                                          foregroundColor: Colors.white,
-                                        ),
-                                        onPressed: () => showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return SackedDocumentsDialog(
-                                                  user: user,
-                                                );
-                                              },
-                                            ),
-                                        child: Text('Sack')),
+                                    Tooltip(
+                                      message:
+                                          "Click to view documents per sack",
+                                      child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                const Color.fromARGB(
+                                                    255, 51, 38, 165),
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          onPressed: () => showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return SackedDocumentsDialog(
+                                                    user: user,
+                                                  );
+                                                },
+                                              ),
+                                          child: Text('Sack')),
+                                    ),
                                   ],
                                 )
                               ],
@@ -2224,8 +2236,6 @@ class _HomePageState extends State<HomePage> {
                                                     'There is no records found'))
                                             : ListView.builder(
                                                 shrinkWrap: true,
-                                                physics:
-                                                    NeverScrollableScrollPhysics(),
                                                 itemCount:
                                                     sackCreatedList.length,
                                                 itemBuilder: (context, index) {
@@ -2249,177 +2259,194 @@ class _HomePageState extends State<HomePage> {
                                                               : Colors
                                                                   .green[200],
                                                         ),
-                                                        child: ListTile(
-                                                          title: Text(
-                                                            sack['sack_name'] ??
-                                                                'No Sack Name',
-                                                            style: TextStyle(
-                                                              fontSize: 16,
-                                                              color: isRejected
-                                                                  ? Colors.white
-                                                                  : Colors
-                                                                      .black,
-                                                            ),
-                                                          ),
-                                                          subtitle: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text(
-                                                                sack['arbiter_number'] ??
-                                                                    'No Arbiter Name',
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontSize: 14,
-                                                                  color: isRejected
-                                                                      ? Colors
-                                                                          .white70
-                                                                      : Colors
-                                                                          .grey,
-                                                                ),
+                                                        child: Tooltip(
+                                                          message:
+                                                              "Click to view documents",
+                                                          child: ListTile(
+                                                            title: Text(
+                                                              sack['sack_name'] ??
+                                                                  'No Sack Name',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 16,
+                                                                color: isRejected
+                                                                    ? Colors
+                                                                        .white
+                                                                    : Colors
+                                                                        .black,
                                                               ),
-                                                              if (isRejected)
+                                                            ),
+                                                            subtitle: Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
                                                                 Text(
-                                                                  "Rejected: ${sack['admin_message'] ?? 'No reason provided'}",
+                                                                  sack['arbiter_number'] ??
+                                                                      'No Arbiter Name',
                                                                   style:
                                                                       TextStyle(
-                                                                    fontSize:
-                                                                        14,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
                                                                     fontStyle:
                                                                         FontStyle
                                                                             .italic,
-                                                                    color: Colors
-                                                                        .white70,
+                                                                    fontSize:
+                                                                        14,
+                                                                    color: isRejected
+                                                                        ? Colors
+                                                                            .white70
+                                                                        : const Color
+                                                                            .fromARGB(
+                                                                            255,
+                                                                            109,
+                                                                            109,
+                                                                            109),
                                                                   ),
                                                                 ),
-                                                            ],
-                                                          ),
-                                                          trailing: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              IconButton(
-                                                                icon: Icon(
-                                                                  Icons.delete,
-                                                                  color: isRejected
-                                                                      ? Colors
-                                                                          .white
-                                                                      : Colors
-                                                                          .red,
+                                                                if (isRejected)
+                                                                  Text(
+                                                                    "Rejected: ${sack['admin_message'] ?? 'No reason provided'}",
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontSize:
+                                                                          14,
+                                                                      fontStyle:
+                                                                          FontStyle
+                                                                              .italic,
+                                                                      color: Colors
+                                                                          .white70,
+                                                                    ),
+                                                                  ),
+                                                              ],
+                                                            ),
+                                                            trailing: Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                Tooltip(
+                                                                  message:
+                                                                      "Delete sack",
+                                                                  child:
+                                                                      IconButton(
+                                                                    icon: Icon(
+                                                                      Icons
+                                                                          .delete,
+                                                                      color: isRejected
+                                                                          ? Colors
+                                                                              .white
+                                                                          : Colors
+                                                                              .red,
+                                                                    ),
+                                                                    onPressed: () =>
+                                                                        showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          ((context) {
+                                                                        return AlertDialog(
+                                                                          contentPadding: EdgeInsets.symmetric(
+                                                                              vertical: 40,
+                                                                              horizontal: 30),
+                                                                          title:
+                                                                              Text('Delete ${sack['sack_name']}'),
+                                                                          content:
+                                                                              Text('Are you sure you want to delete SACK ${sack['sack_name']}?'),
+                                                                          actions: [
+                                                                            ElevatedButton(
+                                                                              style: ElevatedButton.styleFrom(
+                                                                                backgroundColor: Colors.redAccent,
+                                                                                foregroundColor: Colors.white,
+                                                                              ),
+                                                                              onPressed: () => Navigator.pop(context),
+                                                                              child: Text('Cancel'),
+                                                                            ),
+                                                                            ElevatedButton(
+                                                                              style: ElevatedButton.styleFrom(
+                                                                                backgroundColor: Colors.green,
+                                                                                foregroundColor: Colors.white,
+                                                                              ),
+                                                                              onPressed: () => deleteSack(
+                                                                                sack['sack_id'].toString(),
+                                                                                index,
+                                                                              ),
+                                                                              child: Text('Confirm'),
+                                                                            ),
+                                                                          ],
+                                                                          actionsAlignment:
+                                                                              MainAxisAlignment.spaceBetween,
+                                                                        );
+                                                                      }),
+                                                                    ),
+                                                                  ),
                                                                 ),
-                                                                onPressed: () =>
-                                                                    showDialog(
-                                                                  context:
-                                                                      context,
-                                                                  builder:
-                                                                      ((context) {
-                                                                    return AlertDialog(
-                                                                      contentPadding: EdgeInsets.symmetric(
-                                                                          vertical:
-                                                                              40,
-                                                                          horizontal:
-                                                                              30),
-                                                                      title: Text(
-                                                                          'Delete ${sack['sack_name']}'),
-                                                                      content: Text(
-                                                                          'Are you sure you want to delete SACK ${sack['sack_name']}?'),
-                                                                      actions: [
-                                                                        ElevatedButton(
-                                                                          style:
-                                                                              ElevatedButton.styleFrom(
-                                                                            backgroundColor:
-                                                                                Colors.redAccent,
-                                                                            foregroundColor:
-                                                                                Colors.white,
-                                                                          ),
-                                                                          onPressed: () =>
-                                                                              Navigator.pop(context),
-                                                                          child:
-                                                                              Text('Cancel'),
-                                                                        ),
-                                                                        ElevatedButton(
-                                                                          style:
-                                                                              ElevatedButton.styleFrom(
-                                                                            backgroundColor:
-                                                                                Colors.green,
-                                                                            foregroundColor:
-                                                                                Colors.white,
-                                                                          ),
-                                                                          onPressed: () =>
-                                                                              deleteSack(
-                                                                            sack['sack_id'].toString(),
-                                                                            index,
-                                                                          ),
-                                                                          child:
-                                                                              Text('Confirm'),
-                                                                        ),
-                                                                      ],
-                                                                      actionsAlignment:
-                                                                          MainAxisAlignment
-                                                                              .spaceBetween,
-                                                                    );
-                                                                  }),
-                                                                ),
-                                                              ),
-                                                              IconButton(
-                                                                icon: Icon(
-                                                                  Icons.send,
-                                                                  color: isRejected
-                                                                      ? Colors
-                                                                          .white
-                                                                      : Colors
-                                                                          .green,
-                                                                ),
-                                                                onPressed:
-                                                                    () async {
-                                                                  final sackId =
-                                                                      sack['sack_id']
-                                                                          .toString();
-                                                                  final response =
-                                                                      await sendForApproval(
-                                                                          sackId);
+                                                                Tooltip(
+                                                                  message:
+                                                                      "Send for approval",
+                                                                  child:
+                                                                      IconButton(
+                                                                    icon: Icon(
+                                                                      Icons
+                                                                          .send,
+                                                                      color: isRejected
+                                                                          ? Colors
+                                                                              .white
+                                                                          : Colors
+                                                                              .green,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () async {
+                                                                      final sackId =
+                                                                          sack['sack_id']
+                                                                              .toString();
+                                                                      final response =
+                                                                          await sendForApproval(
+                                                                              sackId);
 
-                                                                  if (response[
-                                                                          'status'] ==
-                                                                      'success') {
-                                                                    ScaffoldMessenger.of(
-                                                                            context)
-                                                                        .showSnackBar(
-                                                                      snackBarSuccess(
-                                                                          'Sack sent for approval',
-                                                                          context),
-                                                                    );
-                                                                    setState(
-                                                                        () {
-                                                                      sack['status'] =
-                                                                          'pending';
-                                                                    });
-                                                                  } else {
-                                                                    ScaffoldMessenger.of(
-                                                                            context)
-                                                                        .showSnackBar(
-                                                                      snackBarFailed(
-                                                                          '${response['message']}',
-                                                                          context),
-                                                                    );
-                                                                  }
-                                                                },
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          onTap: () =>
-                                                              showDialog(
-                                                            context: context,
-                                                            builder: (context) {
-                                                              return SackContent(
-                                                                sackId: sack[
-                                                                    'sack_id'],
-                                                                sackName: sack[
-                                                                    'sack_name'],
-                                                              );
-                                                            },
+                                                                      if (response[
+                                                                              'status'] ==
+                                                                          'success') {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          snackBarSuccess(
+                                                                              'Sack sent for approval',
+                                                                              context),
+                                                                        );
+                                                                        setState(
+                                                                            () {
+                                                                          sack['status'] =
+                                                                              'pending';
+                                                                        });
+                                                                      } else {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(
+                                                                          snackBarFailed(
+                                                                              '${response['message']}',
+                                                                              context),
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            onTap: () =>
+                                                                showDialog(
+                                                              context: context,
+                                                              builder:
+                                                                  (context) {
+                                                                return SackContent(
+                                                                  sackId: sack[
+                                                                      'sack_id'],
+                                                                  sackName: sack[
+                                                                      'sack_name'],
+                                                                );
+                                                              },
+                                                            ),
                                                           ),
                                                         ),
                                                       ),

@@ -890,17 +890,17 @@ class _SettingsPageState extends State<SettingsPage> {
                       fetchArbitersList();
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Arbiter added successfully!")),
+                        snackBarSuccess("Arbiter added successfully!", context),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Failed to add arbiter.")),
+                        snackBarFailed("Failed to add arbiter.", context),
                       );
                     }
                   });
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Please fill in all fields.")),
+                    snackBarFailed("Please fill in all fields.", context),
                   );
                 }
               },

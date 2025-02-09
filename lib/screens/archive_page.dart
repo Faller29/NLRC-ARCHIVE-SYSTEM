@@ -40,12 +40,12 @@ class _ArchivePageState extends State<ArchivePage> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch data')),
+          snackBarFailed('Failed to fetch data', context),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        snackBarFailed('Error: $e', context),
       );
     }
   }
@@ -53,7 +53,7 @@ class _ArchivePageState extends State<ArchivePage> {
   Future<void> addSack() async {
     if (_sackId.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a sack name')),
+        snackBarFailed('Please enter a sack name', context),
       );
       return;
     }
@@ -67,7 +67,7 @@ class _ArchivePageState extends State<ArchivePage> {
 
     if (data['status'] == "success") {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Added Sack Successful")),
+        snackBarSuccess("Added Sack Successful", context),
       );
       setState(() {
         sackList.add({
@@ -78,7 +78,7 @@ class _ArchivePageState extends State<ArchivePage> {
       _sackId.clear();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['Failed to Add Sack'])),
+        snackBarFailed("${data['Failed to Add Sack']}", context),
       );
     }
   }
@@ -97,19 +97,19 @@ class _ArchivePageState extends State<ArchivePage> {
 
       if (data['status'] == "success") {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Deleted Successfully')),
+          snackBarSuccess('Deleted Successfully', context),
         );
         setState(() {
           sackList.removeAt(index);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to Delete')),
+          snackBarFailed('Failed to Delete', context),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        snackBarFailed('Error: $e', context),
       );
     }
   }
