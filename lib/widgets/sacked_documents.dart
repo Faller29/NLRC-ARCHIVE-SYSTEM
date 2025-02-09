@@ -194,110 +194,130 @@ class _SackedDocumentsDialogState extends State<SackedDocumentsDialog> {
                         margin: const EdgeInsets.symmetric(
                             vertical: 8.0, horizontal: 16.0),
                         child: ExpansionTile(
-                          title: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          title: Stack(
                             children: [
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    "${sack['sack_name'].toString().toUpperCase()} - ${sack['arbiter_name'].toString().toUpperCase()}",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 20,
-                                  ),
-                                  if (widget.user == null)
-                                    Text(
-                                        "Total Documents: ${sack['documents'].length}"),
-                                ],
-                              ),
-                              if (widget.user != null)
-                                Text(
-                                    "Total Documents: ${sack['documents'].length}"),
-                              if (widget.user == null)
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white),
-                                  onPressed: () {
-                                    // Show AlertDialog when button is pressed
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: Text('Confirm Action'),
-                                          content: Text(
-                                              'Are you sure you want to dispose all the documents in this sack?'),
-                                          actions: <Widget>[
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context)
-                                                    .pop(); // Close the dialog
-                                              },
-                                              child: Text(
-                                                'Cancel',
-                                                style: TextStyle(
-                                                    color: Colors.red),
-                                              ),
-                                            ),
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.green,
-                                                  foregroundColor:
-                                                      Colors.white),
-                                              onPressed: () {
-                                                disposeSack(sackId)
-                                                    .then((success) {
-                                                  if (success) {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      snackBarSuccess(
-                                                          'Sack disposed successfully!',
-                                                          context),
-                                                    );
-                                                  } else {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      snackBarFailed(
-                                                          'Failed to dispose of the sack.',
-                                                          context),
-                                                    );
-                                                  }
-
-                                                  setState(() {
-                                                    //ref
-                                                  });
-                                                });
-
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text('Yes'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: Row(
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Icon(
-                                        Icons.delete,
-                                        color: Colors.white,
+                                      Text(
+                                        "${sack['sack_name'].toString().toUpperCase()} - ${sack['arbiter_name'].toString().toUpperCase()}",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                       SizedBox(
-                                        width: 5,
+                                        width: 20,
                                       ),
-                                      Text('Dispose'),
+                                      if (widget.user == null)
+                                        Text(
+                                            "Total Documents: ${sack['documents'].length}"),
                                     ],
                                   ),
-                                ),
+                                  if (widget.user != null)
+                                    Text(
+                                        "Total Documents: ${sack['documents'].length}"),
+                                  if (widget.user == null)
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                          foregroundColor: Colors.white),
+                                      onPressed: () {
+                                        // Show AlertDialog when button is pressed
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text('Confirm Action'),
+                                              content: Text(
+                                                  'Are you sure you want to dispose all the documents in this sack?'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context)
+                                                        .pop(); // Close the dialog
+                                                  },
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                        color: Colors.red),
+                                                  ),
+                                                ),
+                                                ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              Colors.green,
+                                                          foregroundColor:
+                                                              Colors.white),
+                                                  onPressed: () {
+                                                    disposeSack(sackId)
+                                                        .then((success) {
+                                                      if (success) {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          snackBarSuccess(
+                                                              'Sack disposed successfully!',
+                                                              context),
+                                                        );
+                                                      } else {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          snackBarFailed(
+                                                              'Failed to dispose of the sack.',
+                                                              context),
+                                                        );
+                                                      }
+
+                                                      setState(() {
+                                                        //ref
+                                                      });
+                                                    });
+
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Text('Yes'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.delete,
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text('Dispose'),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Positioned.fill(
+                                child: Align(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "Click to view documents",
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontStyle: FontStyle.italic,
+                                        fontSize: 12,
+                                      ),
+                                    )),
+                              ),
                             ],
                           ),
                           initiallyExpanded: expandedSacks[sackId] ?? false,

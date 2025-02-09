@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 02, 2025 at 06:24 PM
+-- Generation Time: Feb 09, 2025 at 06:52 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -190,19 +190,19 @@ ALTER TABLE `tbl_arbi_user`
 -- AUTO_INCREMENT for table `tbl_archived`
 --
 ALTER TABLE `tbl_archived`
-  MODIFY `req_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `req_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `tbl_document`
 --
 ALTER TABLE `tbl_document`
-  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1591;
+  MODIFY `doc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2883;
 
 --
 -- AUTO_INCREMENT for table `tbl_sack`
 --
 ALTER TABLE `tbl_sack`
-  MODIFY `sack_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=153;
+  MODIFY `sack_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=185;
 
 --
 -- AUTO_INCREMENT for table `tbl_user_account`
