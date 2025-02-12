@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($doc_respondent)) $missing_fields[] = 'doc_respondent';
 
     if (!empty($missing_fields)) {
-        echo json_encode([
+        echo json_encode([  
             'status' => 'error',
             'message' => 'Missing required fields: ' . implode(', ', $missing_fields)
         ]);
