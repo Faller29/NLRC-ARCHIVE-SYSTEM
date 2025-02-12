@@ -283,23 +283,21 @@ class CaseNumberFormatter extends TextInputFormatter {
         newValue.text.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toUpperCase();
 
     String formatted = '';
-
     bool hasPrefix =
         digitsOnly.length >= 3 && RegExp(r'^[A-Z]{3}').hasMatch(digitsOnly);
 
-    int offset = 0;
+    int index = 0;
+
     if (hasPrefix) {
       formatted += digitsOnly.substring(0, 3);
-      offset = 3; // Move offset forward so we process the rest properly
+      if (digitsOnly.length > 3) {
+        formatted += '-';
+      }
+      index = 3;
     }
 
-    for (int i = 0; i < digitsOnly.length - offset; i++) {
-      int index = i + offset;
-      if ((index == 2 ||
-              index == 7 ||
-              index == 9 ||
-              (hasPrefix && index == 3)) &&
-          index < digitsOnly.length) {
+    for (int i = 0; index < digitsOnly.length; i++, index++) {
+      if ((i == 2 || i == 7 || i == 9) && index < digitsOnly.length) {
         formatted += '-';
       }
       formatted += digitsOnly[index];

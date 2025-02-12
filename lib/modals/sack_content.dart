@@ -202,30 +202,37 @@ class _SackContentState extends State<SackContent> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  IconButton(
-                                    icon: Icon(Icons.edit,
-                                        color: Colors.blueAccent),
-                                    onPressed: () => showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AddEditDocument(
-                                          sackId: widget.sackId,
-                                          onDocumentUpdated: () {
-                                            setState(() {
-                                              futureDocuments =
-                                                  fetchDocuments(widget.sackId);
-                                            });
-                                          },
-                                          document: doc,
-                                        );
-                                      },
+                                  Tooltip(
+                                    message: "Edit",
+                                    child: IconButton(
+                                      icon:
+                                          Icon(Icons.edit, color: Colors.green),
+                                      onPressed: () => showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AddEditDocument(
+                                            sackId: widget.sackId,
+                                            onDocumentUpdated: () {
+                                              setState(() {
+                                                futureDocuments =
+                                                    fetchDocuments(
+                                                        widget.sackId);
+                                              });
+                                            },
+                                            document: doc,
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => showDeleteConfirmation(
-                                        doc['doc_id'] ?? ''),
+                                  Tooltip(
+                                    message: "Delete",
+                                    child: IconButton(
+                                      icon:
+                                          Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => showDeleteConfirmation(
+                                          doc['doc_id'] ?? ''),
+                                    ),
                                   ),
                                 ],
                               ),
