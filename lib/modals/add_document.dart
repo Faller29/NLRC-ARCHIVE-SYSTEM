@@ -62,6 +62,7 @@ class _AddEditDocumentState extends State<AddEditDocument> {
       'doc_version': user == null ? 'old' : 'new',
       'doc_volume': _documentVolumeController.text.trim(),
     };
+    /* 
     print(widget.document!['doc_id']);
     print(widget.sackId);
     print("nm${_documentNumberController.text}");
@@ -69,8 +70,7 @@ class _AddEditDocumentState extends State<AddEditDocument> {
     print("vol${_documentVolumeController.text}");
     print("ver${_documentVerdictController.text}");
     print("respo${_respondentController.text}");
-    print("Complainant${_complainantController.text}");
-
+    print("Complainant${_complainantController.text}"); */
     try {
       final response = await http.post(
         Uri.parse(widget.document == null
@@ -78,7 +78,7 @@ class _AddEditDocumentState extends State<AddEditDocument> {
             : 'http://$serverIP/nlrc_archive_api/edit_document.php'),
         body: widget.document == null
             ? data
-            : {...data, 'doc_id': widget.document!['doc_id']},
+            : {...data, 'doc_id': (widget.document!['doc_id']).toString()},
       );
 
       final responseData = jsonDecode(response.body);
@@ -100,6 +100,7 @@ class _AddEditDocumentState extends State<AddEditDocument> {
         );
       }
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         snackBarFailed('Error: ${e.toString()}', context),
       );
@@ -283,18 +284,25 @@ class CaseNumberFormatter extends TextInputFormatter {
 
     String formatted = '';
 
-    if (digitsOnly.length >= 3 && RegExp(r'^[A-Z]{3}').hasMatch(digitsOnly)) {
-      // Case when first 3 characters are letters
-      formatted = '${digitsOnly.substring(0, 3)}-';
-      digitsOnly =
-          digitsOnly.substring(3); // Remove first 3 letters from processing
+    bool hasPrefix =
+        digitsOnly.length >= 3 && RegExp(r'^[A-Z]{3}').hasMatch(digitsOnly);
+
+    int offset = 0;
+    if (hasPrefix) {
+      formatted += digitsOnly.substring(0, 3);
+      offset = 3; // Move offset forward so we process the rest properly
     }
 
-    for (int i = 0; i < digitsOnly.length; i++) {
-      if ((i == 2 || i == 7 || i == 9) && i < digitsOnly.length) {
+    for (int i = 0; i < digitsOnly.length - offset; i++) {
+      int index = i + offset;
+      if ((index == 2 ||
+              index == 7 ||
+              index == 9 ||
+              (hasPrefix && index == 3)) &&
+          index < digitsOnly.length) {
         formatted += '-';
       }
-      formatted += digitsOnly[i];
+      formatted += digitsOnly[index];
     }
 
     return TextEditingValue(
