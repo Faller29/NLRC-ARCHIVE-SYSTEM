@@ -81,10 +81,16 @@ Future<List<dynamic>> fetchCreatedSack() async {
   }
 }
 
-Future<List<dynamic>> fetchPendingSack() async {
+Future<List<dynamic>> fetchPendingSack({String? user}) async {
   var url = "http://$serverIP/nlrc_archive_api/retrieve_pending_sack.php";
+
+  if (user != null) {
+    url += "?user=$user";
+  }
+
   try {
     var response = await http.get(Uri.parse(url));
+
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
       return data;

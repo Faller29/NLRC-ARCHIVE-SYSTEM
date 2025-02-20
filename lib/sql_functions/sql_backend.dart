@@ -132,8 +132,13 @@ Future<void> updateArbiter(String arbiId, String name, String room,
   }
 }
 
-Future<List<Map<String, dynamic>>> fetchRequestedDocuments() async {
+Future<List<Map<String, dynamic>>> fetchRequestedDocuments(
+    {String? user}) async {
   var url = "http://$serverIP/nlrc_archive_api/fetch_request.php";
+
+  if (user != null) {
+    url += "?user=$user";
+  }
 
   try {
     var response = await http.get(Uri.parse(url));

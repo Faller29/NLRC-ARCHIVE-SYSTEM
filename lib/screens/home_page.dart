@@ -2537,7 +2537,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               Expanded(
                                 child: FutureBuilder<List<dynamic>>(
-                                    future: fetchPendingSack(),
+                                    future: fetchPendingSack(user: user),
                                     builder: (context, snapshot) {
                                       if (snapshot.connectionState ==
                                           ConnectionState.waiting) {
@@ -2588,7 +2588,8 @@ class _HomePageState extends State<HomePage> {
                                                           builder: (context) {
                                                             return SackContent(
                                                                 sackId: sack[
-                                                                    'sack_id'],
+                                                                        'sack_id']
+                                                                    .toString(),
                                                                 sackName: sack[
                                                                     'sack_name'],
                                                                 pending:
@@ -2599,26 +2600,33 @@ class _HomePageState extends State<HomePage> {
                                                       SizedBox(
                                                         width: 10,
                                                       ),
-                                                      Text(
-                                                        "${sack['sack_name']}" ??
-                                                            'N/A',
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                          color: Colors.white,
+                                                      Expanded(
+                                                        child: Text(
+                                                          "${sack['sack_name'].toString()}" ??
+                                                              'N/A',
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            color: Colors.white,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.center,
                                                         ),
-                                                        textAlign:
-                                                            TextAlign.center,
                                                       ),
                                                     ],
                                                   ),
                                                 ),
                                                 Expanded(
                                                   child: Text(
-                                                    sack['arbiter_number'] ??
+                                                    "${sack['arbiter_number'].toString()}" ??
                                                         'N/A',
                                                     style: TextStyle(
                                                       fontSize: 14,
                                                       color: Colors.white,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                     textAlign: TextAlign.center,
                                                   ),

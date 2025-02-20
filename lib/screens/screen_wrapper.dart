@@ -263,7 +263,7 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                                 Expanded(
                                   child:
                                       FutureBuilder<List<Map<String, dynamic>>>(
-                                    future: fetchRequestedDocuments(),
+                                    future: fetchRequestedDocuments(user: user),
                                     builder: (context, snapshot) {
                                       if (snapshot.connectionState ==
                                           ConnectionState.waiting) {
@@ -637,7 +637,7 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                                 SizedBox(
                                   width: 10,
                                 ),
-                                Text('Approve')
+                                Text('Confirm')
                               ],
                             ),
                             onPressed: () async {
@@ -652,7 +652,7 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                               Navigator.pop(context);
                             },
                           ),
-                          ElevatedButton(
+                          /* ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                               foregroundColor: Colors.white,
@@ -673,7 +673,7 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                               updateDocumentStatus(doc['doc_id'], "Stored");
                               Navigator.pop(context, true);
                             },
-                          ),
+                          ), */
                         ],
                       ),
                   ],

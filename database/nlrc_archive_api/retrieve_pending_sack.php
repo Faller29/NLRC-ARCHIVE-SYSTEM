@@ -5,28 +5,37 @@ header('Content-Type: application/json');
 
 $con = dbconnection(); 
 
+$user = isset($_GET['user']) ? $_GET['user'] : null;
 
 $query = "SELECT sack_id, sack_name, arbiter_number 
           FROM tbl_sack 
-          WHERE status = 'Pending'"; 
+          WHERE status = 'Pending'";
 
-$result = mysqli_query($con, $query);
+if (!empty($user)) {
+    $query .= " AND arbiter_number = ?";
+}
+
+$stmt = $con->prepare($query);
+
+if (!empty($user)) {
+    $stmt->bind_param("s", $user);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 
 if (!$result) {
-    
-    echo json_encode(['error' => 'Failed to execute query: ' . mysqli_error($con)]);
+    echo json_encode(['error' => 'Failed to execute query: ' . $con->error]);
     exit;
 }
 
-$data = []; 
+$data = [];
 
-
-while ($row = mysqli_fetch_assoc($result)) {
+while ($row = $result->fetch_assoc()) {
     $data[] = $row;
 }
 
-
-echo json_encode($data); 
+echo json_encode($data);
 
 mysqli_close($con); 
 ?>

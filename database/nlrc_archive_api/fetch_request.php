@@ -3,7 +3,8 @@ include("setConnection/db_connection.php");
 
 $conn = dbconnection();
 
-// Update the query to remove the unnecessary status check
+$user = isset($_GET['user']) ? $_GET['user'] : null;
+
 $sql = "SELECT 
     a.req_id, 
     a.timestamp, 
@@ -24,10 +25,20 @@ JOIN tbl_document d ON d.doc_id = a.doc_id
 JOIN tbl_sack s ON s.sack_id = d.sack_id
 JOIN tbl_user_account u ON u.acc_id = a.acc_id
 LEFT JOIN tbl_arbi_user ar ON ar.arbi_id = u.arbi_id
-WHERE d.status = 'Requested' 
-"; 
+WHERE d.status = 'Requested'";
 
-$result = $conn->query($sql);
+if (!empty($user)) {
+    $sql .= " AND s.arbiter_number = ?";
+}
+
+$stmt = $conn->prepare($sql);
+
+if (!empty($user)) {
+    $stmt->bind_param("s", $user);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 
 $documents = [];
 
