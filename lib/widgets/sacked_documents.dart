@@ -300,7 +300,7 @@ class _SackedDocumentsDialogState extends State<SackedDocumentsDialog> {
                                           SizedBox(
                                             width: 5,
                                           ),
-                                          Text('Dispose'),
+                                          Text('Archive'),
                                         ],
                                       ),
                                     ),

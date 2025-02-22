@@ -495,8 +495,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                 ),
                                 SizedBox(height: 10),
-
-                                // 🔍 SEARCH BAR
                                 TextField(
                                   controller: _searchController,
                                   decoration: InputDecoration(
@@ -509,9 +507,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                   onChanged: _filterDocuments,
                                 ),
-
                                 SizedBox(height: 10),
-
                                 Expanded(
                                   child: _filteredDocuments.isEmpty
                                       ? Center(
@@ -614,6 +610,45 @@ class _SettingsPageState extends State<SettingsPage> {
                                                                     .ellipsis,
                                                           ),
                                                         ),
+                                                        SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                        Align(
+                                                          alignment: Alignment
+                                                              .centerLeft,
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons.storage,
+                                                                size: 16,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 5,
+                                                              ),
+                                                              Text(
+                                                                "${retrieved['arbiter_number']} - ${retrieved['sack_name']}",
+                                                                style: TextStyle(
+                                                                    color: const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        15,
+                                                                        78,
+                                                                        18),
+                                                                    fontSize:
+                                                                        13,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        )
                                                       ],
                                                     ),
                                                     Divider(),
@@ -622,8 +657,19 @@ class _SettingsPageState extends State<SettingsPage> {
                                                           MainAxisAlignment
                                                               .spaceBetween,
                                                       children: [
-                                                        Text(
-                                                            "${retrieved['timestamp']}"),
+                                                        Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons.access_time,
+                                                              size: 22,
+                                                            ),
+                                                            SizedBox(
+                                                              width: 5,
+                                                            ),
+                                                            Text(
+                                                                "${retrieved['timestamp']}"),
+                                                          ],
+                                                        ),
                                                         ElevatedButton.icon(
                                                           onPressed: () =>
                                                               showDialog(
@@ -635,7 +681,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                                                       title: Text(
                                                                           "Case #: ${retrieved['doc_number']}"),
                                                                       content: Text(
-                                                                          'Archive Case #: ${retrieved['doc_number']}?'),
+                                                                          'Store Case #: ${retrieved['doc_number']}?'),
                                                                       actions: [
                                                                         ElevatedButton(
                                                                           style: ElevatedButton.styleFrom(
@@ -665,8 +711,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                                               Icons.archive,
                                                               color:
                                                                   Colors.white),
-                                                          label:
-                                                              Text("Archive"),
+                                                          label: Text("Store"),
                                                           style: ElevatedButton
                                                               .styleFrom(
                                                             backgroundColor:
@@ -812,9 +857,16 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
@@ -870,7 +922,10 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
+              child: Text(
+                "Cancel",
+                style: TextStyle(color: Colors.red),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(

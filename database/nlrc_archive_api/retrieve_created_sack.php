@@ -33,3 +33,4 @@ echo json_encode($data);
 
 mysqli_close($con); 
 ?>
+

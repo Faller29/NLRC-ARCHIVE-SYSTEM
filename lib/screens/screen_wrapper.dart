@@ -642,7 +642,7 @@ class _ScreenWrapperState extends State<ScreenWrapper> {
                             ),
                             onPressed: () async {
                               await updateDocumentStatus(
-                                      doc['doc_id'], "Retrieved")
+                                      doc['doc_id'].toString(), "Retrieved")
                                   .then((_) {
                                 setState(() {
                                   //ref

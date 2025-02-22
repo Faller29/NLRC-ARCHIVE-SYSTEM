@@ -877,7 +877,7 @@ class _HomePageState extends State<HomePage> {
                                                   return DocumentDialog();
                                                 },
                                               ),
-                                          child: Text('Disposed')),
+                                          child: Text('Archived')),
                                     ),
                                     SizedBox(
                                       width: 20,
@@ -1378,9 +1378,9 @@ class _HomePageState extends State<HomePage> {
                                                                           horizontal:
                                                                               30),
                                                                       title: Text(
-                                                                          'Delete ${doc['doc_number']}'),
+                                                                          'Archive ${doc['doc_number']}'),
                                                                       content: Text(
-                                                                          'Are you sure you want to dispose Document ${doc['doc_number']}?'),
+                                                                          'Are you sure you want to archive Document ${doc['doc_number']}?'),
                                                                       actions: [
                                                                         ElevatedButton(
                                                                           style:
@@ -1435,7 +1435,7 @@ class _HomePageState extends State<HomePage> {
                                                                   }),
                                                                 ),
                                                                 child: Text(
-                                                                  "Dispose",
+                                                                  "Archive",
                                                                 ),
                                                               ),
                                                           ],
@@ -2649,7 +2649,8 @@ class _HomePageState extends State<HomePage> {
                                                             if (sackId !=
                                                                 null) {
                                                               await updateSackStatus(
-                                                                      sackId)
+                                                                      sackId
+                                                                          .toString())
                                                                   .then(
                                                                       (_) async {
                                                                 setState(() {
@@ -2670,7 +2671,8 @@ class _HomePageState extends State<HomePage> {
                                                             if (sackId !=
                                                                 null) {
                                                               await rejectSack(
-                                                                      sackId)
+                                                                      sackId
+                                                                          .toString())
                                                                   .then(
                                                                       (_) async {
                                                                 setState(() {

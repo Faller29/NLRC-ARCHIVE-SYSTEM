@@ -50,7 +50,7 @@ class _DocumentDialogState extends State<DocumentDialog> {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: Text(
-                      'Find Disposed Document',
+                      'Find Archived Document',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
